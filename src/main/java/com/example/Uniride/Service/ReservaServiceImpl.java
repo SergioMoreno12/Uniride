@@ -51,7 +51,39 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     public Reserva guardar(ReservaDTO dto) {
-        return reservaRepository.save(toEntity(dto));
+
+        // 1. Verificar que el viaje existe y está disponible
+        Viaje viaje = viajeRepository.findById(dto.getIdViaje())
+                .orElseThrow(() -> new RuntimeException("Viaje no encontrado con id: " + dto.getIdViaje()));
+
+        if (!viaje.getEstado().equals("disponible")) {
+            throw new RuntimeException("El viaje no está disponible para reservas.");
+        }
+
+        // 2. Verificar que el usuario no tenga ya una reserva en ese viaje
+        int yaReservo = reservaRepository.existeReservaPorUsuarioYViaje(dto.getIdViaje(), dto.getIdUsuario());
+        if (yaReservo > 0) {
+            throw new RuntimeException("El usuario ya tiene una reserva en este viaje.");
+        }
+
+        // 3. Verificar que el viaje aún tiene puestos disponibles
+        int capacidad = viaje.getVehiculo().getCapacidad();
+        int reservasActuales = reservaRepository.contarReservasConfirmadasPorViaje(dto.getIdViaje());
+
+        if (reservasActuales >= capacidad) {
+            throw new RuntimeException("El viaje ya no tiene puestos disponibles.");
+        }
+
+        // 4. Guardar la reserva
+        Reserva nuevaReserva = reservaRepository.save(toEntity(dto));
+
+        // 5. Si se llena con esta reserva, cambiar estado del viaje a "lleno"
+        if (reservasActuales + 1 >= capacidad) {
+            viaje.setEstado("lleno");
+            viajeRepository.save(viaje);
+        }
+
+        return nuevaReserva;
     }
 
     @Override

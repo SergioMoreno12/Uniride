@@ -17,4 +17,12 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
     @Query(value = "SELECT * FROM reserva WHERE id_viaje = :idViaje AND confirmada = true", nativeQuery = true)
     List<Reserva> findConfirmadasByViaje(Long idViaje);
+
+    // Cuenta cuántas reservas confirmadas tiene un viaje
+    @Query(value = "SELECT COUNT(*) FROM reserva WHERE id_viaje = :idViaje AND confirmada = true", nativeQuery = true)
+    int contarReservasConfirmadasPorViaje(Long idViaje);
+
+    // Verifica si un usuario ya tiene reserva en ese viaje
+    @Query(value = "SELECT COUNT(*) FROM reserva WHERE id_viaje = :idViaje AND id_usuario = :idUsuario", nativeQuery = true)
+    int existeReservaPorUsuarioYViaje(Long idViaje, Long idUsuario);
 }

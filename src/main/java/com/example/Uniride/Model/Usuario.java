@@ -1,5 +1,6 @@
 package com.example.Uniride.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,6 +31,11 @@ public class Usuario {
 
     @Column(name = "fecha_registro", nullable = false)
     private LocalDate fechaRegistro;
+
+    // La contraseña nunca se devuelve en las respuestas JSON
+    @JsonIgnore
+    @Column(nullable = false)
+    private String contrasena;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("usuario")

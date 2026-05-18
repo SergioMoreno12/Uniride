@@ -11,4 +11,5 @@ public class UsuarioDTO {
     private String correo;
     private String telefono;
     private LocalDate fechaRegistro;
+    private String contrasena;
 }

@@ -1,4 +1,8 @@
 package com.example.Uniride.Service;
 
-public class AuthService {
+import com.example.Uniride.DTO.LoginDTO;
+import com.example.Uniride.DTO.LoginResponseDTO;
+
+public interface AuthService {
+    LoginResponseDTO login(LoginDTO dto);
 }

@@ -36,8 +36,12 @@ public class ReservaController {
 
     // POST /api/reservas
     @PostMapping
-    public ResponseEntity<Reserva> crear(@RequestBody ReservaDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.guardar(dto));
+    public ResponseEntity<?> crear(@RequestBody ReservaDTO dto) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.guardar(dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // PUT /api/reservas/{id}
