@@ -32,7 +32,9 @@ public class Usuario {
     @Column(name = "fecha_registro", nullable = false)
     private LocalDate fechaRegistro;
 
-    // La contraseña nunca se devuelve en las respuestas JSON
+    @Column(nullable = false, length = 20)
+    private String rol = "pasajero";
+
     @JsonIgnore
     @Column(nullable = false)
     private String contrasena;

@@ -37,19 +37,19 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
-        // 2. Buscar el usuario normal en la base de datos
+        // 2. Buscar usuario en la base de datos
         Usuario usuario = usuarioRepository.findByCorreo(dto.getCorreo())
                 .orElseThrow(() -> new RuntimeException("Correo o contraseña incorrectos."));
 
-        // 3. Verificar la contraseña encriptada
+        // 3. Verificar contraseña encriptada
         if (!passwordEncoder.matches(dto.getContrasena(), usuario.getContrasena())) {
             throw new RuntimeException("Correo o contraseña incorrectos.");
         }
 
-        // 4. Devolver respuesta con rol (por ahora todos los usuarios son "usuario")
+        // 4. Devolver respuesta con el rol real del usuario (conductor o pasajero)
         return new LoginResponseDTO(
                 "Inicio de sesion exitoso",
-                "usuario",
+                usuario.getRol(),
                 usuario.getIdUsuario(),
                 usuario.getNombre()
         );

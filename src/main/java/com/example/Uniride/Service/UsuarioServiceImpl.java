@@ -25,8 +25,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         u.setCorreo(dto.getCorreo());
         u.setTelefono(dto.getTelefono());
         u.setFechaRegistro(dto.getFechaRegistro());
-        // Encripta la contraseña antes de guardarla
         u.setContrasena(passwordEncoder.encode(dto.getContrasena()));
+        u.setRol(dto.getRol() != null ? dto.getRol() : "pasajero");
         return u;
     }
 
@@ -53,7 +53,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         u.setCorreo(dto.getCorreo());
         u.setTelefono(dto.getTelefono());
         u.setFechaRegistro(dto.getFechaRegistro());
-        // Solo encripta si viene una nueva contraseña
+        if (dto.getRol() != null) u.setRol(dto.getRol());
         if (dto.getContrasena() != null && !dto.getContrasena().isBlank()) {
             u.setContrasena(passwordEncoder.encode(dto.getContrasena()));
         }

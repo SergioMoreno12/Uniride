@@ -9,7 +9,8 @@ import java.time.LocalDate;
 public class UsuarioDTO {
     private String nombre;
     private String correo;
+    private String contrasena;
     private String telefono;
     private LocalDate fechaRegistro;
-    private String contrasena;
+    private String rol;
 }
