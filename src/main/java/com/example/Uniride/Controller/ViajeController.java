@@ -18,13 +18,11 @@ public class ViajeController {
         this.viajeService = viajeService;
     }
 
-    // GET /api/viajes
     @GetMapping
     public ResponseEntity<List<Viaje>> listar() {
         return ResponseEntity.ok(viajeService.listarTodos());
     }
 
-    // GET /api/viajes/{id}
     @GetMapping("/{id}")
     public ResponseEntity<Viaje> buscar(@PathVariable Long id) {
         try {
@@ -34,13 +32,11 @@ public class ViajeController {
         }
     }
 
-    // POST /api/viajes
     @PostMapping
     public ResponseEntity<Viaje> crear(@RequestBody ViajeDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(viajeService.guardar(dto));
     }
 
-    // PUT /api/viajes/{id}
     @PutMapping("/{id}")
     public ResponseEntity<Viaje> actualizar(@PathVariable Long id, @RequestBody ViajeDTO dto) {
         try {
@@ -50,7 +46,6 @@ public class ViajeController {
         }
     }
 
-    // DELETE /api/viajes/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         try {
@@ -61,21 +56,28 @@ public class ViajeController {
         }
     }
 
-    // GET /api/viajes/sede/{idSede}
     @GetMapping("/sede/{idSede}")
     public ResponseEntity<List<Viaje>> porSede(@PathVariable Long idSede) {
         return ResponseEntity.ok(viajeService.buscarPorSede(idSede));
     }
 
-    // GET /api/viajes/estado/{estado}
     @GetMapping("/estado/{estado}")
     public ResponseEntity<List<Viaje>> porEstado(@PathVariable String estado) {
         return ResponseEntity.ok(viajeService.buscarPorEstado(estado));
     }
 
-    // GET /api/viajes/vehiculo/{idVehiculo}
     @GetMapping("/vehiculo/{idVehiculo}")
     public ResponseEntity<List<Viaje>> porVehiculo(@PathVariable Long idVehiculo) {
         return ResponseEntity.ok(viajeService.buscarPorVehiculo(idVehiculo));
+    }
+
+    // Cancelar viaje (cambia estado a cancelado)
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<?> cancelar(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(viajeService.cancelar(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

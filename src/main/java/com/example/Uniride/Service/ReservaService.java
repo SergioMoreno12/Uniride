@@ -13,4 +13,6 @@ public interface ReservaService {
     List<Reserva> buscarPorUsuario(Long idUsuario);
     List<Reserva> buscarPorViaje(Long idViaje);
     List<Reserva> confirmadasPorViaje(Long idViaje);
+    Reserva confirmar(Long id);
+    void cancelar(Long id);
 }

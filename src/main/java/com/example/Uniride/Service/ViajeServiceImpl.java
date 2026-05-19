@@ -99,4 +99,11 @@ public class ViajeServiceImpl implements ViajeService {
     public List<Viaje> buscarPorVehiculo(Long idVehiculo) {
         return viajeRepository.findByIdVehiculo(idVehiculo);
     }
+
+    @Override
+    public Viaje cancelar(Long id) {
+        Viaje v = buscarPorId(id);
+        v.setEstado("cancelado");
+        return viajeRepository.save(v);
+    }
 }

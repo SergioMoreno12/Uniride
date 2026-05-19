@@ -13,4 +13,5 @@ public interface ViajeService {
     List<Viaje> buscarPorSede(Long idSede);
     List<Viaje> buscarPorEstado(String estado);
     List<Viaje> buscarPorVehiculo(Long idVehiculo);
+    Viaje cancelar(Long id);
 }

@@ -18,13 +18,11 @@ public class ReservaController {
         this.reservaService = reservaService;
     }
 
-    // GET /api/reservas
     @GetMapping
     public ResponseEntity<List<Reserva>> listar() {
         return ResponseEntity.ok(reservaService.listarTodas());
     }
 
-    // GET /api/reservas/{id}
     @GetMapping("/{id}")
     public ResponseEntity<Reserva> buscar(@PathVariable Long id) {
         try {
@@ -34,7 +32,6 @@ public class ReservaController {
         }
     }
 
-    // POST /api/reservas
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody ReservaDTO dto) {
         try {
@@ -44,7 +41,6 @@ public class ReservaController {
         }
     }
 
-    // PUT /api/reservas/{id}
     @PutMapping("/{id}")
     public ResponseEntity<Reserva> actualizar(@PathVariable Long id, @RequestBody ReservaDTO dto) {
         try {
@@ -54,7 +50,6 @@ public class ReservaController {
         }
     }
 
-    // DELETE /api/reservas/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         try {
@@ -65,21 +60,39 @@ public class ReservaController {
         }
     }
 
-    // GET /api/reservas/usuario/{idUsuario}
     @GetMapping("/usuario/{idUsuario}")
     public ResponseEntity<List<Reserva>> porUsuario(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(reservaService.buscarPorUsuario(idUsuario));
     }
 
-    // GET /api/reservas/viaje/{idViaje}
     @GetMapping("/viaje/{idViaje}")
     public ResponseEntity<List<Reserva>> porViaje(@PathVariable Long idViaje) {
         return ResponseEntity.ok(reservaService.buscarPorViaje(idViaje));
     }
 
-    // GET /api/reservas/viaje/{idViaje}/confirmadas
     @GetMapping("/viaje/{idViaje}/confirmadas")
-    public ResponseEntity<List<Reserva>> confirmadasPorViaje(@PathVariable Long idViaje) {
+    public ResponseEntity<List<Reserva>> confirmadas(@PathVariable Long idViaje) {
         return ResponseEntity.ok(reservaService.confirmadasPorViaje(idViaje));
+    }
+
+    // Confirmar reserva
+    @PatchMapping("/{id}/confirmar")
+    public ResponseEntity<?> confirmar(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(reservaService.confirmar(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Cancelar reserva
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<?> cancelar(@PathVariable Long id) {
+        try {
+            reservaService.cancelar(id);
+            return ResponseEntity.ok("Reserva cancelada.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

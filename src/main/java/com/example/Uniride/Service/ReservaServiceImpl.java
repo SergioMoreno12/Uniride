@@ -30,59 +30,47 @@ public class ReservaServiceImpl implements ReservaService {
         r.setFechaReserva(dto.getFechaReserva());
         r.setConfirmada(dto.getConfirmada() != null ? dto.getConfirmada() : false);
         Usuario u = usuarioRepository.findById(dto.getIdUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + dto.getIdUsuario()));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + dto.getIdUsuario()));
         r.setUsuario(u);
         Viaje v = viajeRepository.findById(dto.getIdViaje())
-                .orElseThrow(() -> new RuntimeException("Viaje no encontrado con id: " + dto.getIdViaje()));
+                .orElseThrow(() -> new RuntimeException("Viaje no encontrado: " + dto.getIdViaje()));
         r.setViaje(v);
         return r;
     }
 
     @Override
-    public List<Reserva> listarTodas() {
-        return reservaRepository.findAll();
-    }
+    public List<Reserva> listarTodas() { return reservaRepository.findAll(); }
 
     @Override
     public Reserva buscarPorId(Long id) {
         return reservaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reserva no encontrada con id: " + id));
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada: " + id));
     }
 
     @Override
     public Reserva guardar(ReservaDTO dto) {
-
-        // 1. Verificar que el viaje existe y está disponible
         Viaje viaje = viajeRepository.findById(dto.getIdViaje())
-                .orElseThrow(() -> new RuntimeException("Viaje no encontrado con id: " + dto.getIdViaje()));
+                .orElseThrow(() -> new RuntimeException("Viaje no encontrado: " + dto.getIdViaje()));
 
-        if (!viaje.getEstado().equals("disponible")) {
+        if (!viaje.getEstado().equals("disponible"))
             throw new RuntimeException("El viaje no está disponible para reservas.");
-        }
 
-        // 2. Verificar que el usuario no tenga ya una reserva en ese viaje
         int yaReservo = reservaRepository.existeReservaPorUsuarioYViaje(dto.getIdViaje(), dto.getIdUsuario());
-        if (yaReservo > 0) {
+        if (yaReservo > 0)
             throw new RuntimeException("El usuario ya tiene una reserva en este viaje.");
-        }
 
-        // 3. Verificar que el viaje aún tiene puestos disponibles
         int capacidad = viaje.getVehiculo().getCapacidad();
         int reservasActuales = reservaRepository.contarReservasConfirmadasPorViaje(dto.getIdViaje());
 
-        if (reservasActuales >= capacidad) {
+        if (reservasActuales >= capacidad)
             throw new RuntimeException("El viaje ya no tiene puestos disponibles.");
-        }
 
-        // 4. Guardar la reserva
         Reserva nuevaReserva = reservaRepository.save(toEntity(dto));
 
-        // 5. Si se llena con esta reserva, cambiar estado del viaje a "lleno"
         if (reservasActuales + 1 >= capacidad) {
             viaje.setEstado("lleno");
             viajeRepository.save(viaje);
         }
-
         return nuevaReserva;
     }
 
@@ -93,12 +81,12 @@ public class ReservaServiceImpl implements ReservaService {
         r.setConfirmada(dto.getConfirmada());
         if (dto.getIdUsuario() != null) {
             Usuario u = usuarioRepository.findById(dto.getIdUsuario())
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + dto.getIdUsuario()));
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + dto.getIdUsuario()));
             r.setUsuario(u);
         }
         if (dto.getIdViaje() != null) {
             Viaje v = viajeRepository.findById(dto.getIdViaje())
-                    .orElseThrow(() -> new RuntimeException("Viaje no encontrado con id: " + dto.getIdViaje()));
+                    .orElseThrow(() -> new RuntimeException("Viaje no encontrado: " + dto.getIdViaje()));
             r.setViaje(v);
         }
         return reservaRepository.save(r);
@@ -107,7 +95,7 @@ public class ReservaServiceImpl implements ReservaService {
     @Override
     public void eliminar(Long id) {
         if (!reservaRepository.existsById(id))
-            throw new RuntimeException("Reserva no encontrada con id: " + id);
+            throw new RuntimeException("Reserva no encontrada: " + id);
         reservaRepository.deleteById(id);
     }
 
@@ -124,5 +112,24 @@ public class ReservaServiceImpl implements ReservaService {
     @Override
     public List<Reserva> confirmadasPorViaje(Long idViaje) {
         return reservaRepository.findConfirmadasByViaje(idViaje);
+    }
+
+    @Override
+    public Reserva confirmar(Long id) {
+        Reserva r = buscarPorId(id);
+        r.setConfirmada(true);
+        return reservaRepository.save(r);
+    }
+
+    @Override
+    public void cancelar(Long id) {
+        Reserva r = buscarPorId(id);
+        Viaje viaje = r.getViaje();
+        // Si el viaje estaba lleno, vuelve a disponible
+        if (viaje.getEstado().equals("lleno")) {
+            viaje.setEstado("disponible");
+            viajeRepository.save(viaje);
+        }
+        reservaRepository.deleteById(id);
     }
 }

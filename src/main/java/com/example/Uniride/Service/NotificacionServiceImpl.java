@@ -1,0 +1,49 @@
+package com.example.Uniride.Service;
+
+import com.example.Uniride.DTO.NotificacionDTO;
+import com.example.Uniride.Model.Notificacion;
+import com.example.Uniride.Repository.NotificacionRepository;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+public class NotificacionServiceImpl implements NotificacionService {
+
+    private final NotificacionRepository notificacionRepository;
+
+    public NotificacionServiceImpl(NotificacionRepository notificacionRepository) {
+        this.notificacionRepository = notificacionRepository;
+    }
+
+    private Notificacion toEntity(NotificacionDTO dto) {
+        Notificacion n = new Notificacion();
+        n.setTitulo(dto.getTitulo());
+        n.setMensaje(dto.getMensaje());
+        n.setDestinatarios(dto.getDestinatarios());
+        n.setFechaEnvio(dto.getFechaEnvio() != null ? dto.getFechaEnvio() : LocalDateTime.now());
+        return n;
+    }
+
+    @Override
+    public List<Notificacion> listarTodas() {
+        return notificacionRepository.findAll();
+    }
+
+    @Override
+    public Notificacion guardar(NotificacionDTO dto) {
+        return notificacionRepository.save(toEntity(dto));
+    }
+
+    @Override
+    public void eliminar(Long id) {
+        if (!notificacionRepository.existsById(id))
+            throw new RuntimeException("Notificación no encontrada: " + id);
+        notificacionRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Notificacion> buscarPorDestinatarios(String destinatarios) {
+        return notificacionRepository.findByDestinatarios(destinatarios);
+    }
+}

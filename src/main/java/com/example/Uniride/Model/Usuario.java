@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -34,6 +33,9 @@ public class Usuario {
 
     @Column(nullable = false, length = 20)
     private String rol = "pasajero";
+
+    @Column(nullable = false)
+    private Boolean activo = true;
 
     @JsonIgnore
     @Column(nullable = false)
