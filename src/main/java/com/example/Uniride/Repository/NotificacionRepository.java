@@ -11,4 +11,7 @@ public interface NotificacionRepository extends JpaRepository<Notificacion, Long
 
     @Query(value = "SELECT * FROM notificacion WHERE destinatarios = :destinatarios", nativeQuery = true)
     List<Notificacion> findByDestinatarios(String destinatarios);
+
+    @Query(value = "SELECT * FROM notificacion WHERE id_usuario = :idUsuario ORDER BY fecha_envio DESC", nativeQuery = true)
+    List<Notificacion> findByIdUsuario(Long idUsuario);
 }

@@ -25,6 +25,12 @@ public class Notificacion {
     @Column(nullable = false, length = 30)
     private String destinatarios;
 
+    @Column(name = "id_usuario")
+    private Long idUsuario;
+
+    @Column(nullable = false)
+    private Boolean leida = false;
+
     @Column(name = "fecha_envio", nullable = false)
     private LocalDateTime fechaEnvio;
 }

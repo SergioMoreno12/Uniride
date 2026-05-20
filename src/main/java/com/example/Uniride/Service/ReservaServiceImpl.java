@@ -1,28 +1,34 @@
 package com.example.Uniride.Service;
 
 import com.example.Uniride.DTO.ReservaDTO;
+import com.example.Uniride.Model.Notificacion;
 import com.example.Uniride.Model.Reserva;
 import com.example.Uniride.Model.Usuario;
 import com.example.Uniride.Model.Viaje;
+import com.example.Uniride.Repository.NotificacionRepository;
 import com.example.Uniride.Repository.ReservaRepository;
 import com.example.Uniride.Repository.UsuarioRepository;
 import com.example.Uniride.Repository.ViajeRepository;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class ReservaServiceImpl implements ReservaService {
 
-    private final ReservaRepository reservaRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final ViajeRepository viajeRepository;
+    private final ReservaRepository      reservaRepository;
+    private final UsuarioRepository      usuarioRepository;
+    private final ViajeRepository        viajeRepository;
+    private final NotificacionRepository notificacionRepository;
 
     public ReservaServiceImpl(ReservaRepository reservaRepository,
                               UsuarioRepository usuarioRepository,
-                              ViajeRepository viajeRepository) {
-        this.reservaRepository = reservaRepository;
-        this.usuarioRepository = usuarioRepository;
-        this.viajeRepository = viajeRepository;
+                              ViajeRepository viajeRepository,
+                              NotificacionRepository notificacionRepository) {
+        this.reservaRepository      = reservaRepository;
+        this.usuarioRepository      = usuarioRepository;
+        this.viajeRepository        = viajeRepository;
+        this.notificacionRepository = notificacionRepository;
     }
 
     private Reserva toEntity(ReservaDTO dto) {
@@ -39,7 +45,9 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
-    public List<Reserva> listarTodas() { return reservaRepository.findAll(); }
+    public List<Reserva> listarTodas() {
+        return reservaRepository.findAll();
+    }
 
     @Override
     public Reserva buscarPorId(Long id) {
@@ -55,7 +63,8 @@ public class ReservaServiceImpl implements ReservaService {
         if (!viaje.getEstado().equals("disponible"))
             throw new RuntimeException("El viaje no está disponible para reservas.");
 
-        int yaReservo = reservaRepository.existeReservaPorUsuarioYViaje(dto.getIdViaje(), dto.getIdUsuario());
+        int yaReservo = reservaRepository.existeReservaPorUsuarioYViaje(
+                dto.getIdViaje(), dto.getIdUsuario());
         if (yaReservo > 0)
             throw new RuntimeException("El usuario ya tiene una reserva en este viaje.");
 
@@ -118,14 +127,39 @@ public class ReservaServiceImpl implements ReservaService {
     public Reserva confirmar(Long id) {
         Reserva r = buscarPorId(id);
         r.setConfirmada(true);
-        return reservaRepository.save(r);
+        Reserva confirmada = reservaRepository.save(r);
+
+        // Enviar notificación al pasajero
+        try {
+            Notificacion notif = new Notificacion();
+            notif.setTitulo("¡Reserva confirmada! 🎉");
+            notif.setMensaje(
+                    "Tu reserva para el viaje de " +
+                            r.getViaje().getOrigen() + " a " +
+                            r.getViaje().getSede().getNombreSede() +
+                            " el " + r.getViaje().getFechaHora().toLocalDate() +
+                            " ha sido confirmada. Punto de encuentro: " +
+                            (r.getViaje().getDescripcionPunto() != null
+                                    ? r.getViaje().getDescripcionPunto()
+                                    : "Por confirmar por el conductor.")
+            );
+            notif.setDestinatarios("pasajero");
+            notif.setIdUsuario(r.getUsuario().getIdUsuario());
+            notif.setLeida(false);
+            notif.setFechaEnvio(LocalDateTime.now());
+            notificacionRepository.save(notif);
+        } catch (Exception e) {
+            // No bloquear la confirmación si falla la notificación
+            System.err.println("Error al enviar notificación: " + e.getMessage());
+        }
+
+        return confirmada;
     }
 
     @Override
     public void cancelar(Long id) {
         Reserva r = buscarPorId(id);
         Viaje viaje = r.getViaje();
-        // Si el viaje estaba lleno, vuelve a disponible
         if (viaje.getEstado().equals("lleno")) {
             viaje.setEstado("disponible");
             viajeRepository.save(viaje);

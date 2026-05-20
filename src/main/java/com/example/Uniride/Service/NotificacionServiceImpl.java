@@ -46,4 +46,18 @@ public class NotificacionServiceImpl implements NotificacionService {
     public List<Notificacion> buscarPorDestinatarios(String destinatarios) {
         return notificacionRepository.findByDestinatarios(destinatarios);
     }
+
+    @Override
+    public List<Notificacion> buscarPorUsuario(Long idUsuario) {
+        return notificacionRepository.findByIdUsuario(idUsuario);
+    }
+
+    @Override
+    public void marcarLeida(Long id) {
+        Notificacion n = notificacionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Notificación no encontrada"));
+        n.setLeida(true);
+        notificacionRepository.save(n);
+    }
+
 }

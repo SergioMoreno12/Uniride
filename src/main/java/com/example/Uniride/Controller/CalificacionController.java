@@ -2,6 +2,7 @@ package com.example.Uniride.Controller;
 
 import com.example.Uniride.DTO.CalificacionDTO;
 import com.example.Uniride.Model.Calificacion;
+import com.example.Uniride.Model.Notificacion;
 import com.example.Uniride.Service.CalificacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,5 +42,17 @@ public class CalificacionController {
     @GetMapping("/reserva/{idReserva}/calificada")
     public ResponseEntity<Boolean> yaCalificada(@PathVariable Long idReserva) {
         return ResponseEntity.ok(calificacionService.yaCalificada(idReserva));
+    }
+
+    // Agrega este endpoint
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<List<Notificacion>> porUsuario(@PathVariable Long idUsuario) {
+        return ResponseEntity.ok(notificacionService.buscarPorUsuario(idUsuario));
+    }
+
+    @PatchMapping("/{id}/leer")
+    public ResponseEntity<Void> marcarLeida(@PathVariable Long id) {
+        notificacionService.marcarLeida(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -17,4 +17,7 @@ public interface ViajeRepository extends JpaRepository<Viaje, Long> {
 
     @Query(value = "SELECT * FROM viaje WHERE id_vehiculo = :idVehiculo", nativeQuery = true)
     List<Viaje> findByIdVehiculo(Long idVehiculo);
+
+    @Query(value = "SELECT * FROM viaje WHERE origen ILIKE %:ciudad%", nativeQuery = true)
+    List<Viaje> findByOrigenContaining(String ciudad);
 }

@@ -8,6 +8,7 @@ import com.example.Uniride.Repository.SedeRepository;
 import com.example.Uniride.Repository.VehiculoRepository;
 import com.example.Uniride.Repository.ViajeRepository;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,34 +27,53 @@ public class ViajeServiceImpl implements ViajeService {
     }
 
     private Viaje toEntity(ViajeDTO dto) {
+        Vehiculo vehiculo = vehiculoRepository.findById(dto.getIdVehiculo())
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado: " + dto.getIdVehiculo()));
+        Sede sede = sedeRepository.findById(dto.getIdSede())
+                .orElseThrow(() -> new RuntimeException("Sede no encontrada: " + dto.getIdSede()));
         Viaje v = new Viaje();
         v.setOrigen(dto.getOrigen());
         v.setDestino(dto.getDestino());
         v.setFechaHora(dto.getFechaHora());
+        v.setHoraLlegada(dto.getHoraLlegada());
         v.setCosto(dto.getCosto());
         v.setEstado(dto.getEstado() != null ? dto.getEstado() : "disponible");
-        Vehiculo vehiculo = vehiculoRepository.findById(dto.getIdVehiculo())
-                .orElseThrow(() -> new RuntimeException("Vehiculo no encontrado con id: " + dto.getIdVehiculo()));
+        v.setDescripcionPunto(dto.getDescripcionPunto());
         v.setVehiculo(vehiculo);
-        Sede sede = sedeRepository.findById(dto.getIdSede())
-                .orElseThrow(() -> new RuntimeException("Sede no encontrada con id: " + dto.getIdSede()));
         v.setSede(sede);
         return v;
     }
 
     @Override
-    public List<Viaje> listarTodos() {
-        return viajeRepository.findAll();
-    }
+    public List<Viaje> listarTodos() { return viajeRepository.findAll(); }
 
     @Override
     public Viaje buscarPorId(Long id) {
         return viajeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Viaje no encontrado con id: " + id));
+                .orElseThrow(() -> new RuntimeException("Viaje no encontrado: " + id));
     }
 
     @Override
     public Viaje guardar(ViajeDTO dto) {
+        // Validar que el conductor no tenga un viaje activo en el mismo horario
+        List<Viaje> viajesActivos = viajeRepository.findByIdVehiculo(dto.getIdVehiculo());
+        for (Viaje viajeExistente : viajesActivos) {
+            if (viajeExistente.getEstado().equals("disponible") ||
+                    viajeExistente.getEstado().equals("lleno")) {
+                LocalDateTime inicio1 = viajeExistente.getFechaHora();
+                LocalDateTime fin1    = viajeExistente.getHoraLlegada() != null
+                        ? viajeExistente.getHoraLlegada()
+                        : inicio1.plusHours(2);
+                LocalDateTime inicio2 = dto.getFechaHora();
+                LocalDateTime fin2    = dto.getHoraLlegada() != null
+                        ? dto.getHoraLlegada()
+                        : inicio2.plusHours(2);
+                boolean solapa = inicio2.isBefore(fin1) && fin2.isAfter(inicio1);
+                if (solapa)
+                    throw new RuntimeException(
+                            "Ya tienes un viaje activo en ese horario. Elige otra fecha u hora.");
+            }
+        }
         return viajeRepository.save(toEntity(dto));
     }
 
@@ -63,16 +83,12 @@ public class ViajeServiceImpl implements ViajeService {
         v.setOrigen(dto.getOrigen());
         v.setDestino(dto.getDestino());
         v.setFechaHora(dto.getFechaHora());
+        if (dto.getHoraLlegada() != null) v.setHoraLlegada(dto.getHoraLlegada());
         v.setCosto(dto.getCosto());
-        v.setEstado(dto.getEstado());
-        if (dto.getIdVehiculo() != null) {
-            Vehiculo vehiculo = vehiculoRepository.findById(dto.getIdVehiculo())
-                    .orElseThrow(() -> new RuntimeException("Vehiculo no encontrado con id: " + dto.getIdVehiculo()));
-            v.setVehiculo(vehiculo);
-        }
+        v.setDescripcionPunto(dto.getDescripcionPunto());
         if (dto.getIdSede() != null) {
             Sede sede = sedeRepository.findById(dto.getIdSede())
-                    .orElseThrow(() -> new RuntimeException("Sede no encontrada con id: " + dto.getIdSede()));
+                    .orElseThrow(() -> new RuntimeException("Sede no encontrada"));
             v.setSede(sede);
         }
         return viajeRepository.save(v);
@@ -81,7 +97,7 @@ public class ViajeServiceImpl implements ViajeService {
     @Override
     public void eliminar(Long id) {
         if (!viajeRepository.existsById(id))
-            throw new RuntimeException("Viaje no encontrado con id: " + id);
+            throw new RuntimeException("Viaje no encontrado: " + id);
         viajeRepository.deleteById(id);
     }
 
@@ -105,5 +121,10 @@ public class ViajeServiceImpl implements ViajeService {
         Viaje v = buscarPorId(id);
         v.setEstado("cancelado");
         return viajeRepository.save(v);
+    }
+
+    @Override
+    public List<Viaje> buscarPorCiudad(String ciudad) {
+        return viajeRepository.findByOrigenContaining(ciudad);
     }
 }
