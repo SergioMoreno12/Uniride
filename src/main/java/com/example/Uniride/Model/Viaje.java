@@ -30,7 +30,7 @@ public class Viaje {
     private LocalDateTime horaLlegada;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private Double costo;
+    private java.math.BigDecimal costo;
 
     @Column(nullable = false, length = 20)
     private String estado = "disponible";
