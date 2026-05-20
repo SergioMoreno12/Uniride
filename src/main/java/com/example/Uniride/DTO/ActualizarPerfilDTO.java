@@ -4,8 +4,9 @@ import lombok.*;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-@ToString
 public class ActualizarPerfilDTO {
     private String nombre;
     private String telefono;
+    private String rol;
+    private String fotoPerfil;
 }

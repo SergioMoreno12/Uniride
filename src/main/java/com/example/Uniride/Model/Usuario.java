@@ -1,11 +1,9 @@
 package com.example.Uniride.Model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Table(name = "usuario")
@@ -19,17 +17,20 @@ public class Usuario {
     @Column(name = "id_usuario")
     private Long idUsuario;
 
-    @Column(nullable = false, length = 100)
-    private String nombre;
-
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(nullable = false, unique = true, length = 200)
     private String correo;
+
+    @Column(name = "fecha_registro", nullable = false)
+    private LocalDate fechaRegistro;
+
+    @Column(nullable = false, length = 200)
+    private String nombre;
 
     @Column(length = 20)
     private String telefono;
 
-    @Column(name = "fecha_registro", nullable = false)
-    private LocalDate fechaRegistro;
+    @Column(nullable = false, length = 200)
+    private String contrasena;
 
     @Column(nullable = false, length = 20)
     private String rol = "pasajero";
@@ -37,17 +38,6 @@ public class Usuario {
     @Column(nullable = false)
     private Boolean activo = true;
 
-    @JsonIgnore
-    @Column(nullable = false)
-    private String contrasena;
-
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("usuario")
-    @ToString.Exclude
-    private List<TelefonoUsuario> telefonos;
-
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("usuario")
-    @ToString.Exclude
-    private List<Vehiculo> vehiculos;
+    @Column(name = "foto_perfil", length = 500)
+    private String fotoPerfil;
 }
