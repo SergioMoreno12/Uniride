@@ -15,4 +15,5 @@ public interface ReservaService {
     List<Reserva> confirmadasPorViaje(Long idViaje);
     Reserva confirmar(Long id);
     void cancelar(Long id);
+    void marcarCalificada(Long id);
 }

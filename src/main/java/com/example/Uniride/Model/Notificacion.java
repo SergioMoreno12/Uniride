@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 @Table(name = "notificacion")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-@ToString
 public class Notificacion {
 
     @Id
@@ -27,6 +26,9 @@ public class Notificacion {
 
     @Column(name = "id_usuario")
     private Long idUsuario;
+
+    @Column(name = "id_viaje")
+    private Long idViaje;
 
     @Column(nullable = false)
     private Boolean leida = false;

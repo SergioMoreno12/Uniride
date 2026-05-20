@@ -25,39 +25,8 @@ public class ReservaController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Reserva> buscar(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(reservaService.buscarPorId(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @PostMapping
-    public ResponseEntity<?> crear(@RequestBody ReservaDTO dto) {
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.guardar(dto));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Reserva> actualizar(@PathVariable Long id, @RequestBody ReservaDTO dto) {
-        try {
-            return ResponseEntity.ok(reservaService.actualizar(id, dto));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        try {
-            reservaService.eliminar(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        try { return ResponseEntity.ok(reservaService.buscarPorId(id)); }
+        catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
     }
 
     @GetMapping("/usuario/{idUsuario}")
@@ -70,29 +39,36 @@ public class ReservaController {
         return ResponseEntity.ok(reservaService.buscarPorViaje(idViaje));
     }
 
-    @GetMapping("/viaje/{idViaje}/confirmadas")
-    public ResponseEntity<List<Reserva>> confirmadas(@PathVariable Long idViaje) {
-        return ResponseEntity.ok(reservaService.confirmadasPorViaje(idViaje));
+    @PostMapping
+    public ResponseEntity<?> crear(@RequestBody ReservaDTO dto) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.guardar(dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // Confirmar reserva
     @PatchMapping("/{id}/confirmar")
     public ResponseEntity<?> confirmar(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(reservaService.confirmar(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        try { return ResponseEntity.ok(reservaService.confirmar(id)); }
+        catch (RuntimeException e) { return ResponseEntity.badRequest().body(e.getMessage()); }
     }
 
-    // Cancelar reserva
     @PatchMapping("/{id}/cancelar")
     public ResponseEntity<?> cancelar(@PathVariable Long id) {
-        try {
-            reservaService.cancelar(id);
-            return ResponseEntity.ok("Reserva cancelada.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        try { reservaService.cancelar(id); return ResponseEntity.ok("Reserva cancelada"); }
+        catch (RuntimeException e) { return ResponseEntity.badRequest().body(e.getMessage()); }
+    }
+
+    @PatchMapping("/{id}/calificada")
+    public ResponseEntity<Void> marcarCalificada(@PathVariable Long id) {
+        try { reservaService.marcarCalificada(id); return ResponseEntity.noContent().build(); }
+        catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        try { reservaService.eliminar(id); return ResponseEntity.noContent().build(); }
+        catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
     }
 }

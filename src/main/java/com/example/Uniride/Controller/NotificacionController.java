@@ -30,28 +30,23 @@ public class NotificacionController {
 
     @PostMapping
     public ResponseEntity<Notificacion> crear(@RequestBody NotificacionDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(notificacionService.guardar(dto));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        try {
-            notificacionService.eliminar(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/destinatarios/{dest}")
-    public ResponseEntity<List<Notificacion>> porDestinatarios(@PathVariable String dest) {
-        return ResponseEntity.ok(notificacionService.buscarPorDestinatarios(dest));
+        return ResponseEntity.status(HttpStatus.CREATED).body(notificacionService.guardar(dto));
     }
 
     @PatchMapping("/{id}/leer")
     public ResponseEntity<Void> marcarLeida(@PathVariable Long id) {
         notificacionService.marcarLeida(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        try { notificacionService.eliminar(id); return ResponseEntity.noContent().build(); }
+        catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
+    }
+
+    @GetMapping("/destinatarios/{dest}")
+    public ResponseEntity<List<Notificacion>> porDestinatarios(@PathVariable String dest) {
+        return ResponseEntity.ok(notificacionService.buscarPorDestinatarios(dest));
     }
 }

@@ -9,7 +9,6 @@ import java.time.LocalDate;
 @Table(name = "reserva")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-@ToString
 public class Reserva {
 
     @Id
@@ -23,15 +22,18 @@ public class Reserva {
     @Column(nullable = false)
     private Boolean confirmada = false;
 
+    @Column(nullable = false)
+    private Boolean calificada = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", nullable = false)
-    @JsonIgnoreProperties({"telefonos", "vehiculos", "hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({"telefonos","vehiculos","hibernateLazyInitializer","handler"})
     @ToString.Exclude
     private Usuario usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_viaje", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
     @ToString.Exclude
     private Viaje viaje;
 }

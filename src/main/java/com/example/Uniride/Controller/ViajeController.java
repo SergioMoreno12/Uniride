@@ -72,4 +72,15 @@ public class ViajeController {
         try { return ResponseEntity.ok(viajeService.cancelar(id)); }
         catch (RuntimeException e) { return ResponseEntity.badRequest().body(e.getMessage()); }
     }
+
+    // Agrega dentro del controlador existente:
+
+    @PatchMapping("/{id}/completar")
+    public ResponseEntity<?> completar(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(viajeService.completar(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
