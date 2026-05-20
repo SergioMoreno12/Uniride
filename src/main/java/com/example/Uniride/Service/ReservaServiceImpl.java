@@ -68,7 +68,7 @@ public class ReservaServiceImpl implements ReservaService {
         if (yaReservo > 0)
             throw new RuntimeException("El usuario ya tiene una reserva en este viaje.");
 
-        int capacidad = viaje.getVehiculo().getCapacidad();
+        int capacidad       = viaje.getVehiculo().getCapacidad();
         int reservasActuales = reservaRepository.contarReservasConfirmadasPorViaje(dto.getIdViaje());
 
         if (reservasActuales >= capacidad)
@@ -133,24 +133,21 @@ public class ReservaServiceImpl implements ReservaService {
         try {
             Notificacion notif = new Notificacion();
             notif.setTitulo("¡Reserva confirmada! 🎉");
-            notif.setMensaje(
-                    "Tu reserva para el viaje de " +
-                            r.getViaje().getOrigen() + " a " +
-                            r.getViaje().getSede().getNombreSede() +
-                            " el " + r.getViaje().getFechaHora().toLocalDate() +
-                            " ha sido confirmada. Punto de encuentro: " +
-                            (r.getViaje().getDescripcionPunto() != null
-                                    ? r.getViaje().getDescripcionPunto()
-                                    : "Por confirmar por el conductor.")
-            );
+            notif.setMensaje("Tu reserva para el viaje de " +
+                    r.getViaje().getOrigen() + " a " +
+                    r.getViaje().getSede().getNombreSede() +
+                    " el " + r.getViaje().getFechaHora().toLocalDate() +
+                    " ha sido confirmada. Punto de encuentro: " +
+                    (r.getViaje().getDescripcionPunto() != null
+                            ? r.getViaje().getDescripcionPunto()
+                            : "Por confirmar"));
             notif.setDestinatarios("pasajero");
             notif.setIdUsuario(r.getUsuario().getIdUsuario());
             notif.setLeida(false);
             notif.setFechaEnvio(LocalDateTime.now());
             notificacionRepository.save(notif);
         } catch (Exception e) {
-            // No bloquear la confirmación si falla la notificación
-            System.err.println("Error al enviar notificación: " + e.getMessage());
+            // No fallar si la notificación falla
         }
 
         return confirmada;
