@@ -18,19 +18,22 @@ public class NotificacionController {
         this.notificacionService = notificacionService;
     }
 
-    // GET /api/notificaciones
     @GetMapping
     public ResponseEntity<List<Notificacion>> listar() {
         return ResponseEntity.ok(notificacionService.listarTodas());
     }
 
-    // POST /api/notificaciones
-    @PostMapping
-    public ResponseEntity<Notificacion> crear(@RequestBody NotificacionDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(notificacionService.guardar(dto));
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<List<Notificacion>> porUsuario(@PathVariable Long idUsuario) {
+        return ResponseEntity.ok(notificacionService.buscarPorUsuario(idUsuario));
     }
 
-    // DELETE /api/notificaciones/{id}
+    @PostMapping
+    public ResponseEntity<Notificacion> crear(@RequestBody NotificacionDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(notificacionService.guardar(dto));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         try {
@@ -41,9 +44,14 @@ public class NotificacionController {
         }
     }
 
-    // GET /api/notificaciones/destinatarios/{dest}
     @GetMapping("/destinatarios/{dest}")
     public ResponseEntity<List<Notificacion>> porDestinatarios(@PathVariable String dest) {
         return ResponseEntity.ok(notificacionService.buscarPorDestinatarios(dest));
+    }
+
+    @PatchMapping("/{id}/leer")
+    public ResponseEntity<Void> marcarLeida(@PathVariable Long id) {
+        notificacionService.marcarLeida(id);
+        return ResponseEntity.noContent().build();
     }
 }
