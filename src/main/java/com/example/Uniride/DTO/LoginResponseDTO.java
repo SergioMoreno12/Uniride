@@ -3,10 +3,12 @@ package com.example.Uniride.DTO;
 import lombok.*;
 
 @Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginResponseDTO {
     private String mensaje;
-    private String rol;       // "conductor", "pasajero" o "administrador"
-    private Long idUsuario;   // null si es administrador
+    private String rol;
+    private Long   idUsuario;
     private String nombre;
+    private String fotoPerfil;
 }

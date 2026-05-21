@@ -27,13 +27,13 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscar(@PathVariable Long id) {
+    public ResponseEntity<?> buscar(@PathVariable Long id) {
         try { return ResponseEntity.ok(usuarioService.buscarPorId(id)); }
         catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
     }
 
     @GetMapping("/correo/{correo}")
-    public ResponseEntity<Usuario> buscarPorCorreo(@PathVariable String correo) {
+    public ResponseEntity<?> buscarPorCorreo(@PathVariable String correo) {
         try { return ResponseEntity.ok(usuarioService.buscarPorCorreo(correo)); }
         catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
     }
@@ -47,7 +47,6 @@ public class UsuarioController {
         }
     }
 
-    // Actualiza perfil completo: nombre, telefono, rol, fotoPerfil
     @PatchMapping("/{id}/perfil")
     public ResponseEntity<?> actualizarPerfil(
             @PathVariable Long id,
@@ -69,7 +68,7 @@ public class UsuarioController {
     }
 
     @PatchMapping("/{id}/activo")
-    public ResponseEntity<Usuario> toggleActivo(@PathVariable Long id) {
+    public ResponseEntity<?> toggleActivo(@PathVariable Long id) {
         try { return ResponseEntity.ok(usuarioService.toggleActivo(id)); }
         catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
     }
@@ -84,12 +83,27 @@ public class UsuarioController {
             dto.setTelefono(body.get("telefono"));
             dto.setRol(body.get("rol"));
             return ResponseEntity.ok(usuarioService.actualizarPerfil(id, dto));
-        } catch (RuntimeException e) { return ResponseEntity.badRequest().body(e.getMessage()); }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        try { usuarioService.eliminar(id); return ResponseEntity.noContent().build(); }
-        catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
+        try {
+            usuarioService.eliminar(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            // Distingue entre no encontrado y error de restricción
+            if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
+                return ResponseEntity.notFound().build();
+            }
+            // Error de constraint (tiene reservas, viajes, etc.)
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No se puede eliminar: el usuario tiene registros asociados.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No se puede eliminar: el usuario tiene registros asociados.");
+        }
     }
 }
