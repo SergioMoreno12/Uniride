@@ -39,12 +39,19 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Usuario guardar(UsuarioDTO dto) {
         if (usuarioRepository.findByCorreo(dto.getCorreo()).isPresent())
             throw new RuntimeException("El correo ya está registrado");
+
+        String rol = dto.getRol() != null ? dto.getRol() : "pasajero";
+
+        // Nadie puede registrarse como administrador desde este endpoint
+        if ("administrador".equals(rol))
+            throw new RuntimeException("No se puede registrar un usuario con rol administrador.");
+
         Usuario u = new Usuario();
         u.setCorreo(dto.getCorreo());
         u.setNombre(dto.getNombre());
         u.setTelefono(dto.getTelefono());
         u.setContrasena(encoder.encode(dto.getContrasena()));
-        u.setRol(dto.getRol() != null ? dto.getRol() : "pasajero");
+        u.setRol(rol);
         u.setFechaRegistro(LocalDate.now());
         u.setActivo(true);
         return usuarioRepository.save(u);
@@ -53,10 +60,17 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public Usuario actualizarPerfil(Long id, ActualizarPerfilDTO dto) {
         Usuario u = buscarPorId(id);
-        if (dto.getNombre()    != null) u.setNombre(dto.getNombre());
-        if (dto.getTelefono()  != null) u.setTelefono(dto.getTelefono());
-        if (dto.getRol()       != null) u.setRol(dto.getRol());
-        if (dto.getFotoPerfil()!= null) u.setFotoPerfil(dto.getFotoPerfil());
+        if (dto.getNombre()     != null) u.setNombre(dto.getNombre());
+        if (dto.getTelefono()   != null) u.setTelefono(dto.getTelefono());
+        if (dto.getFotoPerfil() != null) u.setFotoPerfil(dto.getFotoPerfil());
+
+        // Nadie puede escalar privilegios asignándose el rol administrador
+        if (dto.getRol() != null) {
+            if ("administrador".equals(dto.getRol()))
+                throw new RuntimeException("No se puede asignar el rol administrador a un usuario.");
+            u.setRol(dto.getRol());
+        }
+
         return usuarioRepository.save(u);
     }
 
