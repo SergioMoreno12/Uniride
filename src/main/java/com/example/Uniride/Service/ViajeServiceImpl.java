@@ -1,17 +1,10 @@
 package com.example.Uniride.Service;
 
 import com.example.Uniride.DTO.ViajeDTO;
-import com.example.Uniride.Model.Notificacion;
-import com.example.Uniride.Model.Reserva;
-import com.example.Uniride.Model.Sede;
-import com.example.Uniride.Model.Vehiculo;
-import com.example.Uniride.Model.Viaje;
-import com.example.Uniride.Repository.NotificacionRepository;
-import com.example.Uniride.Repository.ReservaRepository;
-import com.example.Uniride.Repository.SedeRepository;
-import com.example.Uniride.Repository.VehiculoRepository;
-import com.example.Uniride.Repository.ViajeRepository;
+import com.example.Uniride.Model.*;
+import com.example.Uniride.Repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,6 +15,7 @@ public class ViajeServiceImpl implements ViajeService {
     private final VehiculoRepository     vehiculoRepository;
     private final SedeRepository         sedeRepository;
     private final ReservaRepository      reservaRepository;
+    private final CalificacionRepository calificacionRepository;
     private final NotificacionRepository notificacionRepository;
 
     public ViajeServiceImpl(
@@ -29,19 +23,21 @@ public class ViajeServiceImpl implements ViajeService {
             VehiculoRepository vehiculoRepository,
             SedeRepository sedeRepository,
             ReservaRepository reservaRepository,
+            CalificacionRepository calificacionRepository,
             NotificacionRepository notificacionRepository) {
         this.viajeRepository        = viajeRepository;
         this.vehiculoRepository     = vehiculoRepository;
         this.sedeRepository         = sedeRepository;
         this.reservaRepository      = reservaRepository;
+        this.calificacionRepository = calificacionRepository;
         this.notificacionRepository = notificacionRepository;
     }
 
     private Viaje toEntity(ViajeDTO dto) {
         Vehiculo vehiculo = vehiculoRepository.findById(dto.getIdVehiculo())
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado: " + dto.getIdVehiculo()));
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
         Sede sede = sedeRepository.findById(dto.getIdSede())
-                .orElseThrow(() -> new RuntimeException("Sede no encontrada: " + dto.getIdSede()));
+                .orElseThrow(() -> new RuntimeException("Sede no encontrada"));
         Viaje v = new Viaje();
         v.setOrigen(dto.getOrigen());
         v.setDestino(dto.getDestino());
@@ -66,7 +62,6 @@ public class ViajeServiceImpl implements ViajeService {
 
     @Override
     public Viaje guardar(ViajeDTO dto) {
-        // Validar solapamiento de horarios
         List<Viaje> viajesActivos = viajeRepository.findByIdVehiculo(dto.getIdVehiculo());
         for (Viaje viajeExistente : viajesActivos) {
             if (viajeExistente.getEstado().equals("disponible") ||
@@ -77,10 +72,9 @@ public class ViajeServiceImpl implements ViajeService {
                 LocalDateTime inicio2 = dto.getFechaHora();
                 LocalDateTime fin2    = dto.getHoraLlegada() != null
                         ? dto.getHoraLlegada() : inicio2.plusHours(2);
-                boolean solapa = inicio2.isBefore(fin1) && fin2.isAfter(inicio1);
-                if (solapa)
+                if (inicio2.isBefore(fin1) && fin2.isAfter(inicio1))
                     throw new RuntimeException(
-                            "Ya tienes un viaje activo en ese horario. Elige otra fecha u hora.");
+                            "Ya tienes un viaje activo en ese horario.");
             }
         }
         return viajeRepository.save(toEntity(dto));
@@ -103,10 +97,25 @@ public class ViajeServiceImpl implements ViajeService {
         return viajeRepository.save(v);
     }
 
+    /**
+     * Eliminación en cascada: calificaciones → reservas → viaje
+     */
     @Override
+    @Transactional
     public void eliminar(Long id) {
         if (!viajeRepository.existsById(id))
             throw new RuntimeException("Viaje no encontrado: " + id);
+
+        // 1. Eliminar calificaciones ligadas a reservas de este viaje
+        calificacionRepository.deleteByIdReservaViaje(id);
+
+        // 2. Eliminar reservas del viaje
+        reservaRepository.deleteByIdViaje(id);
+
+        // 3. Eliminar notificaciones del viaje
+        notificacionRepository.deleteByIdViaje(id);
+
+        // 4. Eliminar el viaje
         viajeRepository.deleteById(id);
     }
 
@@ -143,7 +152,6 @@ public class ViajeServiceImpl implements ViajeService {
         v.setEstado("completado");
         Viaje completado = viajeRepository.save(v);
 
-        // Notificar a todos los pasajeros con reserva confirmada
         try {
             List<Reserva> reservas = reservaRepository.findConfirmadasByViaje(id);
             for (Reserva r : reservas) {

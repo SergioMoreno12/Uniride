@@ -2,6 +2,7 @@ package com.example.Uniride.Repository;
 
 import com.example.Uniride.Model.Viaje;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -18,6 +19,13 @@ public interface ViajeRepository extends JpaRepository<Viaje, Long> {
     @Query(value = "SELECT * FROM viaje WHERE id_vehiculo = :idVehiculo", nativeQuery = true)
     List<Viaje> findByIdVehiculo(Long idVehiculo);
 
+    @Query(value = "SELECT id_viaje FROM viaje WHERE id_vehiculo = :idVehiculo", nativeQuery = true)
+    List<Long> findIdsByIdVehiculo(Long idVehiculo);
+
     @Query(value = "SELECT * FROM viaje WHERE origen ILIKE %:ciudad%", nativeQuery = true)
     List<Viaje> findByOrigenContaining(String ciudad);
+
+    @Modifying
+    @Query(value = "DELETE FROM viaje WHERE id_vehiculo = :idVehiculo", nativeQuery = true)
+    void deleteByIdVehiculo(Long idVehiculo);
 }

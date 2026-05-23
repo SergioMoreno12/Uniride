@@ -2,6 +2,7 @@ package com.example.Uniride.Repository;
 
 import com.example.Uniride.Model.Reporte;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -14,4 +15,8 @@ public interface ReporteRepository extends JpaRepository<Reporte, Long> {
 
     @Query(value = "SELECT * FROM reporte WHERE id_usuario = :idUsuario", nativeQuery = true)
     List<Reporte> findByIdUsuario(Long idUsuario);
+
+    @Modifying
+    @Query(value = "DELETE FROM reporte WHERE id_usuario = :idUsuario", nativeQuery = true)
+    void deleteByIdUsuario(Long idUsuario);
 }
