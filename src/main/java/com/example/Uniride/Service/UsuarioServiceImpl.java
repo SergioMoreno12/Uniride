@@ -5,24 +5,25 @@ import com.example.Uniride.DTO.CambiarContrasenaDTO;
 import com.example.Uniride.DTO.UsuarioDTO;
 import com.example.Uniride.Model.Usuario;
 import com.example.Uniride.Repository.*;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
 
-    private final UsuarioRepository      usuarioRepository;
-    private final ReservaRepository      reservaRepository;
-    private final VehiculoRepository     vehiculoRepository;
-    private final ViajeRepository        viajeRepository;
-    private final CalificacionRepository calificacionRepository;
-    private final ReporteRepository      reporteRepository;
+    private final UsuarioRepository         usuarioRepository;
+    private final ReservaRepository         reservaRepository;
+    private final VehiculoRepository        vehiculoRepository;
+    private final ViajeRepository           viajeRepository;
+    private final CalificacionRepository    calificacionRepository;
+    private final ReporteRepository         reporteRepository;
     private final TelefonoUsuarioRepository telefonoRepository;
-    private final NotificacionRepository notificacionRepository;
-    private final BCryptPasswordEncoder  encoder = new BCryptPasswordEncoder();
+    private final NotificacionRepository    notificacionRepository;
+    private final PasswordEncoder           encoder;
 
     public UsuarioServiceImpl(
             UsuarioRepository usuarioRepository,
@@ -32,7 +33,8 @@ public class UsuarioServiceImpl implements UsuarioService {
             CalificacionRepository calificacionRepository,
             ReporteRepository reporteRepository,
             TelefonoUsuarioRepository telefonoRepository,
-            NotificacionRepository notificacionRepository) {
+            NotificacionRepository notificacionRepository,
+            PasswordEncoder encoder) {
         this.usuarioRepository      = usuarioRepository;
         this.reservaRepository      = reservaRepository;
         this.vehiculoRepository     = vehiculoRepository;
@@ -41,6 +43,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         this.reporteRepository      = reporteRepository;
         this.telefonoRepository     = telefonoRepository;
         this.notificacionRepository = notificacionRepository;
+        this.encoder                = encoder;
     }
 
     @Override
@@ -60,7 +63,14 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public Usuario guardar(UsuarioDTO dto) {
-        if (usuarioRepository.findByCorreo(dto.getCorreo()).isPresent())
+        if (dto.getCorreo() == null || dto.getCorreo().isBlank())
+            throw new RuntimeException("El correo es obligatorio");
+        if (dto.getContrasena() == null || dto.getContrasena().length() < 6)
+            throw new RuntimeException("La contraseña debe tener al menos 6 caracteres");
+        if (dto.getNombre() == null || dto.getNombre().isBlank())
+            throw new RuntimeException("El nombre es obligatorio");
+
+        if (usuarioRepository.findByCorreo(dto.getCorreo().trim()).isPresent())
             throw new RuntimeException("El correo ya está registrado");
 
         String rol = dto.getRol() != null ? dto.getRol() : "pasajero";
@@ -68,8 +78,8 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new RuntimeException("No se puede registrar un usuario con rol administrador.");
 
         Usuario u = new Usuario();
-        u.setCorreo(dto.getCorreo());
-        u.setNombre(dto.getNombre());
+        u.setCorreo(dto.getCorreo().trim());
+        u.setNombre(dto.getNombre().trim());
         u.setTelefono(dto.getTelefono());
         u.setContrasena(encoder.encode(dto.getContrasena()));
         u.setRol(rol);
@@ -95,6 +105,8 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public void cambiarContrasena(Long id, CambiarContrasenaDTO dto) {
         Usuario u = buscarPorId(id);
+        if (dto.getContrasenaNueva() == null || dto.getContrasenaNueva().length() < 6)
+            throw new RuntimeException("La nueva contraseña debe tener al menos 6 caracteres");
         if (!encoder.matches(dto.getContrasenaActual(), u.getContrasena()))
             throw new RuntimeException("Contraseña actual incorrecta");
         u.setContrasena(encoder.encode(dto.getContrasenaNueva()));
@@ -109,9 +121,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     /**
-     * Eliminación en cascada manual:
-     * calificaciones → reservas → (calificaciones de viajes del usuario →
-     * reservas de viajes → viajes) → vehículos → reportes → teléfonos → usuario
+     * Eliminación en cascada manual
      */
     @Override
     @Transactional
@@ -119,40 +129,25 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (!usuarioRepository.existsById(id))
             throw new RuntimeException("Usuario no encontrado: " + id);
 
-        // 1. Eliminar calificaciones donde el usuario es pasajero o conductor
         calificacionRepository.deleteByIdPasajero(id);
         calificacionRepository.deleteByIdConductor(id);
-
-        // 2. Eliminar reservas del usuario como pasajero
         reservaRepository.deleteByIdUsuario(id);
 
-        // 3. Eliminar datos de viajes que publicó como conductor
         List<Long> idsVehiculos = vehiculoRepository.findIdsByIdUsuario(id);
         for (Long idVehiculo : idsVehiculos) {
             List<Long> idsViajes = viajeRepository.findIdsByIdVehiculo(idVehiculo);
             for (Long idViaje : idsViajes) {
-                // Calificaciones de ese viaje
                 calificacionRepository.deleteByIdReservaViaje(idViaje);
-                // Reservas de ese viaje
                 reservaRepository.deleteByIdViaje(idViaje);
+                notificacionRepository.deleteByIdViaje(idViaje);
             }
-            // Viajes del vehículo
             viajeRepository.deleteByIdVehiculo(idVehiculo);
         }
 
-        // 4. Eliminar vehículos
         vehiculoRepository.deleteByIdUsuario(id);
-
-        // 5. Eliminar reportes
         reporteRepository.deleteByIdUsuario(id);
-
-        // 6. Eliminar teléfonos
         telefonoRepository.deleteByIdUsuario(id);
-
-        // 7. Eliminar notificaciones
         notificacionRepository.deleteByIdUsuario(id);
-
-        // 8. Eliminar usuario
         usuarioRepository.deleteById(id);
     }
 }

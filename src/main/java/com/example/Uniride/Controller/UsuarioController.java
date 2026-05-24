@@ -8,8 +8,8 @@ import com.example.Uniride.Service.UsuarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -73,15 +73,15 @@ public class UsuarioController {
         catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
     }
 
+    /**
+     * Acepta un DTO completo de actualización de perfil (nombre, telefono,
+     * rol y fotoPerfil opcionalmente).
+     */
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
+            @RequestBody ActualizarPerfilDTO dto) {
         try {
-            ActualizarPerfilDTO dto = new ActualizarPerfilDTO();
-            dto.setNombre(body.get("nombre"));
-            dto.setTelefono(body.get("telefono"));
-            dto.setRol(body.get("rol"));
             return ResponseEntity.ok(usuarioService.actualizarPerfil(id, dto));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -94,11 +94,9 @@ public class UsuarioController {
             usuarioService.eliminar(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            // Distingue entre no encontrado y error de restricción
             if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
                 return ResponseEntity.notFound().build();
             }
-            // Error de constraint (tiene reservas, viajes, etc.)
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("No se puede eliminar: el usuario tiene registros asociados.");
         } catch (Exception e) {

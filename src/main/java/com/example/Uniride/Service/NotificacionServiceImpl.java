@@ -4,6 +4,7 @@ import com.example.Uniride.DTO.NotificacionDTO;
 import com.example.Uniride.Model.Notificacion;
 import com.example.Uniride.Repository.NotificacionRepository;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,8 +21,10 @@ public class NotificacionServiceImpl implements NotificacionService {
         Notificacion n = new Notificacion();
         n.setTitulo(dto.getTitulo());
         n.setMensaje(dto.getMensaje());
-        n.setDestinatarios(dto.getDestinatarios());
+        n.setDestinatarios(dto.getDestinatarios() != null ? dto.getDestinatarios() : "todos");
         n.setFechaEnvio(dto.getFechaEnvio() != null ? dto.getFechaEnvio() : LocalDateTime.now());
+        n.setLeida(false);
+        // id_usuario queda null → es broadcast; el repo lo entrega a usuarios por rol
         return n;
     }
 
@@ -32,6 +35,10 @@ public class NotificacionServiceImpl implements NotificacionService {
 
     @Override
     public Notificacion guardar(NotificacionDTO dto) {
+        if (dto.getTitulo() == null || dto.getTitulo().isBlank())
+            throw new RuntimeException("El título es obligatorio");
+        if (dto.getMensaje() == null || dto.getMensaje().isBlank())
+            throw new RuntimeException("El mensaje es obligatorio");
         return notificacionRepository.save(toEntity(dto));
     }
 
@@ -59,5 +66,4 @@ public class NotificacionServiceImpl implements NotificacionService {
         n.setLeida(true);
         notificacionRepository.save(n);
     }
-
 }

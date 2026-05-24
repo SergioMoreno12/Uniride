@@ -5,7 +5,7 @@ import com.example.Uniride.Repository.AdminCredencialRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -15,7 +15,7 @@ import java.util.Optional;
 public class AdminConfig implements ApplicationRunner {
 
     private final AdminCredencialRepository adminRepository;
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder encoder;
 
     @Value("${admin.correo:admin@uniride.edu.co}")
     private String adminCorreo;
@@ -26,8 +26,9 @@ public class AdminConfig implements ApplicationRunner {
     @Value("${admin.nombre:Administrador UniRide}")
     private String adminNombre;
 
-    public AdminConfig(AdminCredencialRepository adminRepository) {
+    public AdminConfig(AdminCredencialRepository adminRepository, PasswordEncoder encoder) {
         this.adminRepository = adminRepository;
+        this.encoder = encoder;
     }
 
     @Override

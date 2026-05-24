@@ -19,7 +19,7 @@ public class Reporte {
     @Column(nullable = false, length = 200)
     private String titulo;
 
-    @Column(nullable = false, length = 500)
+    @Column(nullable = false, length = 1000)
     private String descripcion;
 
     @Column(nullable = false, length = 20)

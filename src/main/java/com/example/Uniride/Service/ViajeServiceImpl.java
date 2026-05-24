@@ -5,6 +5,7 @@ import com.example.Uniride.Model.*;
 import com.example.Uniride.Repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -62,6 +63,16 @@ public class ViajeServiceImpl implements ViajeService {
 
     @Override
     public Viaje guardar(ViajeDTO dto) {
+        if (dto.getOrigen() == null || dto.getOrigen().isBlank())
+            throw new RuntimeException("El origen es obligatorio");
+        if (dto.getFechaHora() == null)
+            throw new RuntimeException("La fecha y hora son obligatorias");
+        if (dto.getFechaHora().isBefore(LocalDateTime.now()))
+            throw new RuntimeException("No puedes publicar un viaje en el pasado");
+        if (dto.getCosto() == null || dto.getCosto() < 0)
+            throw new RuntimeException("El costo debe ser mayor o igual a 0");
+
+        // Validar solapamiento con viajes activos del mismo vehículo
         List<Viaje> viajesActivos = viajeRepository.findByIdVehiculo(dto.getIdVehiculo());
         for (Viaje viajeExistente : viajesActivos) {
             if (viajeExistente.getEstado().equals("disponible") ||
@@ -88,7 +99,8 @@ public class ViajeServiceImpl implements ViajeService {
         v.setFechaHora(dto.getFechaHora());
         if (dto.getHoraLlegada() != null) v.setHoraLlegada(dto.getHoraLlegada());
         v.setCosto(dto.getCosto());
-        v.setDescripcionPunto(dto.getDescripcionPunto());
+        if (dto.getDescripcionPunto() != null)
+            v.setDescripcionPunto(dto.getDescripcionPunto());
         if (dto.getIdSede() != null) {
             Sede sede = sedeRepository.findById(dto.getIdSede())
                     .orElseThrow(() -> new RuntimeException("Sede no encontrada"));
@@ -97,25 +109,14 @@ public class ViajeServiceImpl implements ViajeService {
         return viajeRepository.save(v);
     }
 
-    /**
-     * Eliminación en cascada: calificaciones → reservas → viaje
-     */
     @Override
     @Transactional
     public void eliminar(Long id) {
         if (!viajeRepository.existsById(id))
             throw new RuntimeException("Viaje no encontrado: " + id);
-
-        // 1. Eliminar calificaciones ligadas a reservas de este viaje
         calificacionRepository.deleteByIdReservaViaje(id);
-
-        // 2. Eliminar reservas del viaje
         reservaRepository.deleteByIdViaje(id);
-
-        // 3. Eliminar notificaciones del viaje
         notificacionRepository.deleteByIdViaje(id);
-
-        // 4. Eliminar el viaje
         viajeRepository.deleteById(id);
     }
 
