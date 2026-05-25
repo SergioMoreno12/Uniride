@@ -3,6 +3,9 @@ package com.example.Uniride.Controller;
 import com.example.Uniride.DTO.ViajeDTO;
 import com.example.Uniride.Model.Viaje;
 import com.example.Uniride.Service.ViajeService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,28 +26,34 @@ public class ViajeController {
         return ResponseEntity.ok(viajeService.listarTodos());
     }
 
+    // ✅ Endpoint paginado — Recomendación del profesor
+    // Uso: GET /api/viajes/paginado?page=0&size=10&sort=fechaHora,asc
+    @GetMapping("/paginado")
+    public ResponseEntity<Page<Viaje>> listarPaginado(Pageable pageable) {
+        return ResponseEntity.ok(viajeService.listarPaginado(pageable));
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Viaje> buscar(@PathVariable Long id) {
+    public ResponseEntity<?> buscar(@PathVariable Long id) {
         try { return ResponseEntity.ok(viajeService.buscarPorId(id)); }
         catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody ViajeDTO dto) {
-        try { return ResponseEntity.status(HttpStatus.CREATED).body(viajeService.guardar(dto)); }
-        catch (RuntimeException e) { return ResponseEntity.badRequest().body(e.getMessage()); }
+    public ResponseEntity<?> crear(@Valid @RequestBody ViajeDTO dto) {
+        // ✅ @Valid — Recomendación del profesor
+        return ResponseEntity.status(HttpStatus.CREATED).body(viajeService.guardar(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Viaje> actualizar(@PathVariable Long id, @RequestBody ViajeDTO dto) {
-        try { return ResponseEntity.ok(viajeService.actualizar(id, dto)); }
-        catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
+    public ResponseEntity<?> actualizar(@PathVariable Long id, @Valid @RequestBody ViajeDTO dto) {
+        return ResponseEntity.ok(viajeService.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        try { viajeService.eliminar(id); return ResponseEntity.noContent().build(); }
-        catch (RuntimeException e) { return ResponseEntity.notFound().build(); }
+        viajeService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/sede/{idSede}")
@@ -69,18 +78,11 @@ public class ViajeController {
 
     @PatchMapping("/{id}/cancelar")
     public ResponseEntity<?> cancelar(@PathVariable Long id) {
-        try { return ResponseEntity.ok(viajeService.cancelar(id)); }
-        catch (RuntimeException e) { return ResponseEntity.badRequest().body(e.getMessage()); }
+        return ResponseEntity.ok(viajeService.cancelar(id));
     }
-
-    // Agrega dentro del controlador existente:
 
     @PatchMapping("/{id}/completar")
     public ResponseEntity<?> completar(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(viajeService.completar(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(viajeService.completar(id));
     }
 }
