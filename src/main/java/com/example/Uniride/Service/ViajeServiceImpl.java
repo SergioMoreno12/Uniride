@@ -6,6 +6,7 @@ import com.example.Uniride.Repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class ViajeServiceImpl implements ViajeService {
         v.setCosto(dto.getCosto());
         v.setEstado(dto.getEstado() != null ? dto.getEstado() : "disponible");
         v.setDescripcionPunto(dto.getDescripcionPunto());
+        v.setTipoViaje(dto.getTipoViaje() != null ? dto.getTipoViaje() : "ida");
         v.setVehiculo(vehiculo);
         v.setSede(sede);
         return v;
@@ -63,14 +65,33 @@ public class ViajeServiceImpl implements ViajeService {
 
     @Override
     public Viaje guardar(ViajeDTO dto) {
+        // ── Validaciones ──
         if (dto.getOrigen() == null || dto.getOrigen().isBlank())
             throw new RuntimeException("El origen es obligatorio");
+        if (dto.getDestino() == null || dto.getDestino().isBlank())
+            throw new RuntimeException("El destino es obligatorio");
         if (dto.getFechaHora() == null)
             throw new RuntimeException("La fecha y hora son obligatorias");
-        if (dto.getFechaHora().isBefore(LocalDateTime.now()))
-            throw new RuntimeException("No puedes publicar un viaje en el pasado");
+
+        // ✅ Validación relajada: NO permitir fechas de DÍAS pasados
+        // (pero sí permitir hoy aunque la hora ya haya pasado un poco)
+        LocalDateTime inicioDeHoy = LocalDate.now().atStartOfDay();
+        if (dto.getFechaHora().isBefore(inicioDeHoy))
+            throw new RuntimeException("No puedes publicar un viaje en una fecha pasada");
+
         if (dto.getCosto() == null || dto.getCosto() < 0)
             throw new RuntimeException("El costo debe ser mayor o igual a 0");
+
+        // Validar que hora de llegada sea posterior a la de salida
+        if (dto.getHoraLlegada() != null &&
+                dto.getHoraLlegada().isBefore(dto.getFechaHora()))
+            throw new RuntimeException("La hora de llegada debe ser posterior a la de salida");
+
+        // Validar tipoViaje
+        String tipo = dto.getTipoViaje() != null ? dto.getTipoViaje() : "ida";
+        if (!tipo.equals("ida") && !tipo.equals("vuelta"))
+            throw new RuntimeException("El tipo de viaje debe ser 'ida' o 'vuelta'");
+        dto.setTipoViaje(tipo);
 
         // Validar solapamiento con viajes activos del mismo vehículo
         List<Viaje> viajesActivos = viajeRepository.findByIdVehiculo(dto.getIdVehiculo());
@@ -94,13 +115,14 @@ public class ViajeServiceImpl implements ViajeService {
     @Override
     public Viaje actualizar(Long id, ViajeDTO dto) {
         Viaje v = buscarPorId(id);
-        v.setOrigen(dto.getOrigen());
-        v.setDestino(dto.getDestino());
-        v.setFechaHora(dto.getFechaHora());
+        if (dto.getOrigen() != null)  v.setOrigen(dto.getOrigen());
+        if (dto.getDestino() != null) v.setDestino(dto.getDestino());
+        if (dto.getFechaHora() != null) v.setFechaHora(dto.getFechaHora());
         if (dto.getHoraLlegada() != null) v.setHoraLlegada(dto.getHoraLlegada());
-        v.setCosto(dto.getCosto());
+        if (dto.getCosto() != null) v.setCosto(dto.getCosto());
         if (dto.getDescripcionPunto() != null)
             v.setDescripcionPunto(dto.getDescripcionPunto());
+        if (dto.getTipoViaje() != null) v.setTipoViaje(dto.getTipoViaje());
         if (dto.getIdSede() != null) {
             Sede sede = sedeRepository.findById(dto.getIdSede())
                     .orElseThrow(() -> new RuntimeException("Sede no encontrada"));
@@ -159,7 +181,7 @@ public class ViajeServiceImpl implements ViajeService {
                 Notificacion notif = new Notificacion();
                 notif.setTitulo("¿Cómo fue tu viaje? ⭐");
                 notif.setMensaje("Tu viaje de " + v.getOrigen() + " a " +
-                        v.getSede().getNombreSede() + " ha finalizado. " +
+                        v.getDestino() + " ha finalizado. " +
                         "¡Califica a tu conductor " +
                         v.getVehiculo().getUsuario().getNombre() + "!");
                 notif.setDestinatarios("pasajero");

@@ -5,15 +5,15 @@ import java.time.LocalDateTime;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-@ToString
 public class ViajeDTO {
-    private String origen;
-    private String destino;
+    private String        origen;
+    private String        destino;
     private LocalDateTime fechaHora;
     private LocalDateTime horaLlegada;
-    private Double costo;
-    private String estado;
-    private String descripcionPunto;
-    private Long idVehiculo;
-    private Long idSede;
+    private Double        costo;
+    private String        estado;
+    private String        descripcionPunto;
+    private String        tipoViaje;   // ✅ "ida" o "vuelta"
+    private Long          idVehiculo;
+    private Long          idSede;
 }

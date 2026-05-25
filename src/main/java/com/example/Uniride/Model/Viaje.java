@@ -17,10 +17,10 @@ public class Viaje {
     @Column(name = "id_viaje")
     private Long idViaje;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 100)
     private String origen;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 100)
     private String destino;
 
     @Column(name = "fecha_hora", nullable = false)
@@ -38,13 +38,17 @@ public class Viaje {
     @Column(name = "descripcion_punto", length = 500)
     private String descripcionPunto;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    /** ✅ NUEVO: "ida" (ciudad → universidad) o "vuelta" (universidad → ciudad) */
+    @Column(name = "tipo_viaje", length = 10)
+    private String tipoViaje = "ida";
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_vehiculo", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Vehiculo vehiculo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_sede", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Sede sede;
 }
