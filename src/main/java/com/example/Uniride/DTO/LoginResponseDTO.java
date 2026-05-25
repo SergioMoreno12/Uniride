@@ -11,4 +11,6 @@ public class LoginResponseDTO {
     private Long   idUsuario;
     private String nombre;
     private String fotoPerfil;
+    // ✅ NUEVO: Token JWT para autenticación en siguientes requests
+    private String token;
 }

@@ -3,6 +3,7 @@ package com.example.Uniride.Controller;
 import com.example.Uniride.DTO.CalificacionDTO;
 import com.example.Uniride.Model.Calificacion;
 import com.example.Uniride.Service.CalificacionService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +20,10 @@ public class CalificacionController {
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody CalificacionDTO dto) {
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(calificacionService.guardar(dto));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> crear(@Valid @RequestBody CalificacionDTO dto) {
+        // ✅ @Valid — Recomendación del profesor
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(calificacionService.guardar(dto));
     }
 
     @GetMapping("/conductor/{idConductor}")

@@ -3,6 +3,10 @@ package com.example.Uniride.Service;
 import com.example.Uniride.DTO.ViajeDTO;
 import com.example.Uniride.Model.*;
 import com.example.Uniride.Repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +16,9 @@ import java.util.List;
 
 @Service
 public class ViajeServiceImpl implements ViajeService {
+
+    // ✅ Logger profesional — Recomendación del profesor
+    private static final Logger logger = LoggerFactory.getLogger(ViajeServiceImpl.class);
 
     private final ViajeRepository        viajeRepository;
     private final VehiculoRepository     vehiculoRepository;
@@ -55,7 +62,16 @@ public class ViajeServiceImpl implements ViajeService {
     }
 
     @Override
-    public List<Viaje> listarTodos() { return viajeRepository.findAll(); }
+    public List<Viaje> listarTodos() {
+        return viajeRepository.findAll();
+    }
+
+    // ✅ Paginación — Recomendación del profesor
+    @Override
+    public Page<Viaje> listarPaginado(Pageable pageable) {
+        logger.debug("Listando viajes paginados - página {}", pageable.getPageNumber());
+        return viajeRepository.findAll(pageable);
+    }
 
     @Override
     public Viaje buscarPorId(Long id) {
@@ -65,7 +81,6 @@ public class ViajeServiceImpl implements ViajeService {
 
     @Override
     public Viaje guardar(ViajeDTO dto) {
-        // ── Validaciones ──
         if (dto.getOrigen() == null || dto.getOrigen().isBlank())
             throw new RuntimeException("El origen es obligatorio");
         if (dto.getDestino() == null || dto.getDestino().isBlank())
@@ -73,8 +88,6 @@ public class ViajeServiceImpl implements ViajeService {
         if (dto.getFechaHora() == null)
             throw new RuntimeException("La fecha y hora son obligatorias");
 
-        // ✅ Validación relajada: NO permitir fechas de DÍAS pasados
-        // (pero sí permitir hoy aunque la hora ya haya pasado un poco)
         LocalDateTime inicioDeHoy = LocalDate.now().atStartOfDay();
         if (dto.getFechaHora().isBefore(inicioDeHoy))
             throw new RuntimeException("No puedes publicar un viaje en una fecha pasada");
@@ -82,18 +95,16 @@ public class ViajeServiceImpl implements ViajeService {
         if (dto.getCosto() == null || dto.getCosto() < 0)
             throw new RuntimeException("El costo debe ser mayor o igual a 0");
 
-        // Validar que hora de llegada sea posterior a la de salida
         if (dto.getHoraLlegada() != null &&
                 dto.getHoraLlegada().isBefore(dto.getFechaHora()))
             throw new RuntimeException("La hora de llegada debe ser posterior a la de salida");
 
-        // Validar tipoViaje
         String tipo = dto.getTipoViaje() != null ? dto.getTipoViaje() : "ida";
         if (!tipo.equals("ida") && !tipo.equals("vuelta"))
             throw new RuntimeException("El tipo de viaje debe ser 'ida' o 'vuelta'");
         dto.setTipoViaje(tipo);
 
-        // Validar solapamiento con viajes activos del mismo vehículo
+        // Validar solapamiento de horario con el mismo vehículo
         List<Viaje> viajesActivos = viajeRepository.findByIdVehiculo(dto.getIdVehiculo());
         for (Viaje viajeExistente : viajesActivos) {
             if (viajeExistente.getEstado().equals("disponible") ||
@@ -105,29 +116,31 @@ public class ViajeServiceImpl implements ViajeService {
                 LocalDateTime fin2    = dto.getHoraLlegada() != null
                         ? dto.getHoraLlegada() : inicio2.plusHours(2);
                 if (inicio2.isBefore(fin1) && fin2.isAfter(inicio1))
-                    throw new RuntimeException(
-                            "Ya tienes un viaje activo en ese horario.");
+                    throw new RuntimeException("Ya tienes un viaje activo en ese horario.");
             }
         }
-        return viajeRepository.save(toEntity(dto));
+
+        Viaje nuevo = viajeRepository.save(toEntity(dto));
+        logger.info("Viaje creado id={}, origen={}, destino={}", nuevo.getIdViaje(), nuevo.getOrigen(), nuevo.getDestino());
+        return nuevo;
     }
 
     @Override
     public Viaje actualizar(Long id, ViajeDTO dto) {
         Viaje v = buscarPorId(id);
-        if (dto.getOrigen() != null)  v.setOrigen(dto.getOrigen());
-        if (dto.getDestino() != null) v.setDestino(dto.getDestino());
-        if (dto.getFechaHora() != null) v.setFechaHora(dto.getFechaHora());
-        if (dto.getHoraLlegada() != null) v.setHoraLlegada(dto.getHoraLlegada());
-        if (dto.getCosto() != null) v.setCosto(dto.getCosto());
-        if (dto.getDescripcionPunto() != null)
-            v.setDescripcionPunto(dto.getDescripcionPunto());
-        if (dto.getTipoViaje() != null) v.setTipoViaje(dto.getTipoViaje());
-        if (dto.getIdSede() != null) {
+        if (dto.getOrigen()           != null) v.setOrigen(dto.getOrigen());
+        if (dto.getDestino()          != null) v.setDestino(dto.getDestino());
+        if (dto.getFechaHora()        != null) v.setFechaHora(dto.getFechaHora());
+        if (dto.getHoraLlegada()      != null) v.setHoraLlegada(dto.getHoraLlegada());
+        if (dto.getCosto()            != null) v.setCosto(dto.getCosto());
+        if (dto.getDescripcionPunto() != null) v.setDescripcionPunto(dto.getDescripcionPunto());
+        if (dto.getTipoViaje()        != null) v.setTipoViaje(dto.getTipoViaje());
+        if (dto.getIdSede()           != null) {
             Sede sede = sedeRepository.findById(dto.getIdSede())
                     .orElseThrow(() -> new RuntimeException("Sede no encontrada"));
             v.setSede(sede);
         }
+        logger.info("Viaje id={} actualizado", id);
         return viajeRepository.save(v);
     }
 
@@ -140,6 +153,7 @@ public class ViajeServiceImpl implements ViajeService {
         reservaRepository.deleteByIdViaje(id);
         notificacionRepository.deleteByIdViaje(id);
         viajeRepository.deleteById(id);
+        logger.info("Viaje id={} eliminado con datos asociados", id);
     }
 
     @Override
@@ -166,6 +180,7 @@ public class ViajeServiceImpl implements ViajeService {
     public Viaje cancelar(Long id) {
         Viaje v = buscarPorId(id);
         v.setEstado("cancelado");
+        logger.info("Viaje id={} cancelado", id);
         return viajeRepository.save(v);
     }
 
@@ -174,6 +189,7 @@ public class ViajeServiceImpl implements ViajeService {
         Viaje v = buscarPorId(id);
         v.setEstado("completado");
         Viaje completado = viajeRepository.save(v);
+        logger.info("Viaje id={} completado", id);
 
         try {
             List<Reserva> reservas = reservaRepository.findConfirmadasByViaje(id);
@@ -183,7 +199,9 @@ public class ViajeServiceImpl implements ViajeService {
                 notif.setMensaje("Tu viaje de " + v.getOrigen() + " a " +
                         v.getDestino() + " ha finalizado. " +
                         "¡Califica a tu conductor " +
-                        v.getVehiculo().getUsuario().getNombre() + "!");
+                        // ✅ null-safe — Recomendación del profesor
+                        (v.getVehiculo() != null && v.getVehiculo().getUsuario() != null
+                                ? v.getVehiculo().getUsuario().getNombre() : "tu conductor") + "!");
                 notif.setDestinatarios("pasajero");
                 notif.setIdUsuario(r.getUsuario().getIdUsuario());
                 notif.setIdViaje(v.getIdViaje());
@@ -191,7 +209,9 @@ public class ViajeServiceImpl implements ViajeService {
                 notif.setFechaEnvio(LocalDateTime.now());
                 notificacionRepository.save(notif);
             }
-        } catch (Exception ignored) { }
+        } catch (Exception e) {
+            logger.warn("Error al crear notificaciones de viaje completado id={}: {}", id, e.getMessage());
+        }
 
         return completado;
     }

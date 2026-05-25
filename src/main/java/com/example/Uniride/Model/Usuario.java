@@ -1,5 +1,6 @@
 package com.example.Uniride.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,6 +30,8 @@ public class Usuario {
     @Column(length = 20)
     private String telefono;
 
+    // ✅ CORRECCIÓN CRÍTICA: nunca exponer la contraseña en respuestas JSON
+    @JsonIgnore
     @Column(nullable = false, length = 200)
     private String contrasena;
 

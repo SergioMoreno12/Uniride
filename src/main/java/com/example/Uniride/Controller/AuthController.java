@@ -3,6 +3,7 @@ package com.example.Uniride.Controller;
 import com.example.Uniride.DTO.LoginDTO;
 import com.example.Uniride.DTO.LoginResponseDTO;
 import com.example.Uniride.Service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,12 +19,10 @@ public class AuthController {
 
     // POST /api/auth/login
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
-        try {
-            LoginResponseDTO response = authService.login(dto);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginDTO dto) {
+        // ✅ @Valid activa las validaciones del DTO — Recomendación del profesor
+        // Los errores son capturados por GlobalExceptionHandler
+        LoginResponseDTO response = authService.login(dto);
+        return ResponseEntity.ok(response);
     }
 }

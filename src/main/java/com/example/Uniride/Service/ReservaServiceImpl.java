@@ -3,6 +3,8 @@ package com.example.Uniride.Service;
 import com.example.Uniride.DTO.ReservaDTO;
 import com.example.Uniride.Model.*;
 import com.example.Uniride.Repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,6 +12,9 @@ import java.util.List;
 
 @Service
 public class ReservaServiceImpl implements ReservaService {
+
+    // ✅ Logger profesional — Recomendación del profesor
+    private static final Logger logger = LoggerFactory.getLogger(ReservaServiceImpl.class);
 
     private final ReservaRepository      reservaRepository;
     private final UsuarioRepository      usuarioRepository;
@@ -59,39 +64,47 @@ public class ReservaServiceImpl implements ReservaService {
         if (!viaje.getEstado().equals("disponible"))
             throw new RuntimeException("El viaje no está disponible para reservas.");
 
-        // Bloquear si el usuario es dueño del vehículo (aunque haya cambiado de rol)
-        Long idDuenio = viaje.getVehiculo().getUsuario().getIdUsuario();
-        if (idDuenio.equals(dto.getIdUsuario()))
-            throw new RuntimeException("No puedes reservar en un viaje que tú publicaste.");
+        // Bloquear si el usuario es dueño del vehículo
+        // ✅ null-safe — Recomendación del profesor
+        if (viaje.getVehiculo() != null && viaje.getVehiculo().getUsuario() != null) {
+            Long idDuenio = viaje.getVehiculo().getUsuario().getIdUsuario();
+            if (idDuenio.equals(dto.getIdUsuario()))
+                throw new RuntimeException("No puedes reservar en un viaje que tú publicaste.");
+        }
 
+        // ✅ Verificar duplicado de reserva — Recomendación del profesor
         int yaReservo = reservaRepository.existeReservaPorUsuarioYViaje(
                 dto.getIdViaje(), dto.getIdUsuario());
         if (yaReservo > 0)
             throw new RuntimeException("Ya tienes una reserva en este viaje.");
 
-        int capacidad        = viaje.getVehiculo().getCapacidad();
+        // ✅ Verificar cupos disponibles — Recomendación del profesor
+        int capacidad        = viaje.getVehiculo() != null ? viaje.getVehiculo().getCapacidad() : 0;
         int reservasActuales = reservaRepository.contarReservasConfirmadasPorViaje(dto.getIdViaje());
 
         if (reservasActuales >= capacidad)
             throw new RuntimeException("El viaje ya no tiene puestos disponibles.");
 
         Reserva nueva = reservaRepository.save(toEntity(dto));
+        logger.info("Reserva creada id={} para usuario={} en viaje={}", nueva.getIdReserva(), dto.getIdUsuario(), dto.getIdViaje());
 
         if (reservasActuales + 1 >= capacidad) {
             viaje.setEstado("lleno");
             viajeRepository.save(viaje);
+            logger.info("Viaje id={} marcado como lleno", viaje.getIdViaje());
         }
 
-        // Notificar al conductor sobre la nueva reserva
+        // Notificar al conductor
         try {
-            Usuario pasajero   = usuarioRepository.findById(dto.getIdUsuario()).orElse(null);
-            Long    idConductor = idDuenio;
+            Long idConductor = viaje.getVehiculo().getUsuario().getIdUsuario();
+            Usuario pasajero = usuarioRepository.findById(dto.getIdUsuario()).orElse(null);
             Notificacion notif = new Notificacion();
             notif.setTitulo("Nueva reserva en tu viaje 🚗");
             notif.setMensaje((pasajero != null ? pasajero.getNombre() : "Un pasajero") +
                     " ha reservado un puesto en tu viaje de " +
                     viaje.getOrigen() + " a " +
-                    viaje.getSede().getNombreSede() +
+                    // ✅ null-safe
+                    (viaje.getSede() != null ? viaje.getSede().getNombreSede() : "la sede") +
                     " el " + viaje.getFechaHora().toLocalDate() +
                     ". Confírmale la reserva.");
             notif.setDestinatarios("conductor");
@@ -100,7 +113,9 @@ public class ReservaServiceImpl implements ReservaService {
             notif.setLeida(false);
             notif.setFechaEnvio(LocalDateTime.now());
             notificacionRepository.save(notif);
-        } catch (Exception ignored) { }
+        } catch (Exception e) {
+            logger.warn("Error al crear notificación de reserva: {}", e.getMessage());
+        }
 
         return nueva;
     }
@@ -108,14 +123,17 @@ public class ReservaServiceImpl implements ReservaService {
     @Override
     public Reserva actualizar(Long id, ReservaDTO dto) {
         Reserva r = buscarPorId(id);
-        r.setFechaReserva(dto.getFechaReserva());
-        r.setConfirmada(dto.getConfirmada());
+        if (dto.getFechaReserva() != null) r.setFechaReserva(dto.getFechaReserva());
+        if (dto.getConfirmada()   != null) r.setConfirmada(dto.getConfirmada());
         return reservaRepository.save(r);
     }
 
     @Override
     public void eliminar(Long id) {
+        if (!reservaRepository.existsById(id))
+            throw new RuntimeException("Reserva no encontrada: " + id);
         reservaRepository.deleteById(id);
+        logger.info("Reserva id={} eliminada", id);
     }
 
     @Override
@@ -138,25 +156,31 @@ public class ReservaServiceImpl implements ReservaService {
         Reserva r = buscarPorId(id);
         r.setConfirmada(true);
         Reserva confirmada = reservaRepository.save(r);
+        logger.info("Reserva id={} confirmada", id);
 
-        // Notificar al pasajero que su reserva fue confirmada
         try {
             Notificacion notif = new Notificacion();
             notif.setTitulo("¡Reserva confirmada! 🎉");
-            notif.setMensaje("Tu reserva para el viaje de " +
-                    r.getViaje().getOrigen() + " a " +
-                    r.getViaje().getSede().getNombreSede() +
-                    " el " + r.getViaje().getFechaHora().toLocalDate() +
-                    " ha sido confirmada. Punto de encuentro: " +
-                    (r.getViaje().getDescripcionPunto() != null
-                            ? r.getViaje().getDescripcionPunto() : "Por confirmar"));
+            // ✅ null-safe — Recomendación del profesor
+            String origen = r.getViaje() != null ? r.getViaje().getOrigen() : "";
+            String sede   = (r.getViaje() != null && r.getViaje().getSede() != null)
+                    ? r.getViaje().getSede().getNombreSede() : "la sede";
+            String fecha  = r.getViaje() != null
+                    ? r.getViaje().getFechaHora().toLocalDate().toString() : "";
+            String punto  = (r.getViaje() != null && r.getViaje().getDescripcionPunto() != null)
+                    ? r.getViaje().getDescripcionPunto() : "Por confirmar";
+
+            notif.setMensaje("Tu reserva para el viaje de " + origen + " a " + sede +
+                    " el " + fecha + " ha sido confirmada. Punto de encuentro: " + punto);
             notif.setDestinatarios("pasajero");
             notif.setIdUsuario(r.getUsuario().getIdUsuario());
             notif.setIdViaje(r.getViaje().getIdViaje());
             notif.setLeida(false);
             notif.setFechaEnvio(LocalDateTime.now());
             notificacionRepository.save(notif);
-        } catch (Exception ignored) { }
+        } catch (Exception e) {
+            logger.warn("Error al crear notificación de confirmación: {}", e.getMessage());
+        }
 
         return confirmada;
     }
@@ -165,11 +189,13 @@ public class ReservaServiceImpl implements ReservaService {
     public void cancelar(Long id) {
         Reserva r = buscarPorId(id);
         Viaje viaje = r.getViaje();
-        if (viaje.getEstado().equals("lleno")) {
+        if (viaje != null && viaje.getEstado().equals("lleno")) {
             viaje.setEstado("disponible");
             viajeRepository.save(viaje);
+            logger.info("Viaje id={} vuelto a disponible por cancelación de reserva", viaje.getIdViaje());
         }
         reservaRepository.deleteById(id);
+        logger.info("Reserva id={} cancelada", id);
     }
 
     @Override
