@@ -30,6 +30,9 @@ public class Notificacion {
     @Column(name = "id_viaje")
     private Long idViaje;
 
+    @Column(name = "id_reserva")
+    private Long idReserva;
+
     @Column(nullable = false)
     private Boolean leida = false;
 

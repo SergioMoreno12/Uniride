@@ -11,7 +11,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -22,13 +21,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ✅ Logger profesional — Recomendación del profesor
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    /**
-     * ✅ Validaciones de @Valid en @RequestBody — Recomendación del profesor.
-     * Captura errores de campos como @NotBlank, @Email, @Size, etc.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidacion(MethodArgumentNotValidException ex) {
         Map<String, String> erroresCampos = ex.getBindingResult()
@@ -46,9 +40,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    /**
-     * ✅ Violaciones de restricciones de Bean Validation en parámetros — Recomendación del profesor.
-     */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
         String mensaje = ex.getConstraintViolations()
@@ -60,9 +51,6 @@ public class GlobalExceptionHandler {
                 .body(buildBody(HttpStatus.BAD_REQUEST, mensaje));
     }
 
-    /**
-     * ✅ Integridad de datos (duplicados, FK violadas) — Recomendación del profesor.
-     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
         logger.error("Violación de integridad de datos: {}", ex.getMostSpecificCause().getMessage());
@@ -71,9 +59,6 @@ public class GlobalExceptionHandler {
                         "No se puede realizar la operación: existen registros relacionados o datos duplicados."));
     }
 
-    /**
-     * ✅ Entidad no encontrada — Recomendación del profesor.
-     */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleEntityNotFound(EntityNotFoundException ex) {
         logger.warn("Entidad no encontrada: {}", ex.getMessage());
@@ -81,9 +66,6 @@ public class GlobalExceptionHandler {
                 .body(buildBody(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
 
-    /**
-     * ✅ Acceso denegado (sin permisos) — Recomendación del profesor.
-     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
         logger.warn("Acceso denegado: {}", ex.getMessage());
@@ -92,9 +74,6 @@ public class GlobalExceptionHandler {
                         "No tienes permisos para realizar esta acción."));
     }
 
-    /**
-     * Errores de negocio lanzados con RuntimeException desde los servicios.
-     */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
         logger.warn("Error de negocio: {}", ex.getMessage());
@@ -102,9 +81,6 @@ public class GlobalExceptionHandler {
                 .body(buildBody(HttpStatus.BAD_REQUEST, ex.getMessage()));
     }
 
-    /**
-     * Fallback para cualquier otra excepción no controlada.
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         logger.error("Error interno no controlado: ", ex);

@@ -17,13 +17,12 @@ import java.util.Optional;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    // ✅ Logger profesional — Recomendación del profesor
     private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final UsuarioRepository         usuarioRepository;
     private final AdminCredencialRepository adminRepository;
     private final PasswordEncoder           encoder;
-    private final JwtUtil                   jwtUtil;   // ✅ JWT — Recomendación del profesor
+    private final JwtUtil                   jwtUtil;
 
     public AuthServiceImpl(UsuarioRepository usuarioRepository,
                            AdminCredencialRepository adminRepository,
@@ -58,7 +57,6 @@ public class AuthServiceImpl implements AuthService {
             if (Boolean.FALSE.equals(admin.getActivo()))
                 throw new RuntimeException("La cuenta de administrador está desactivada.");
 
-            // ✅ Generar JWT para el admin
             String token = jwtUtil.generarToken(admin.getIdAdmin(), "administrador");
             logger.info("Login exitoso de administrador id={}", admin.getIdAdmin());
 
@@ -68,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
                     admin.getIdAdmin(),
                     admin.getNombre(),
                     null,
-                    token   // ✅ token JWT
+                    token
             );
         }
 
@@ -88,7 +86,6 @@ public class AuthServiceImpl implements AuthService {
         if (Boolean.FALSE.equals(u.getActivo()))
             throw new RuntimeException("Tu cuenta ha sido desactivada. Contacta al administrador.");
 
-        // ✅ Generar JWT para el usuario
         String token = jwtUtil.generarToken(u.getIdUsuario(), u.getRol());
         logger.info("Login exitoso de usuario id={}, rol={}", u.getIdUsuario(), u.getRol());
 
@@ -98,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
                 u.getIdUsuario(),
                 u.getNombre(),
                 u.getFotoPerfil(),
-                token   // ✅ token JWT
+                token
         );
     }
 }

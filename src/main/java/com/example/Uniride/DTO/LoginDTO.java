@@ -9,7 +9,6 @@ import lombok.*;
 @AllArgsConstructor
 public class LoginDTO {
 
-    // ✅ Validaciones — Recomendación del profesor
     @NotBlank(message = "El correo es obligatorio")
     @Email(message = "Formato de correo inválido")
     private String correo;

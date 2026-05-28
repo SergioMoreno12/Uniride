@@ -32,7 +32,6 @@ public class VehiculoController {
 
     @PostMapping
     public ResponseEntity<?> crear(@Valid @RequestBody VehiculoDTO dto) {
-        // ✅ @Valid — Recomendación del profesor
         return ResponseEntity.status(HttpStatus.CREATED).body(vehiculoService.guardar(dto));
     }
 

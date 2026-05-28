@@ -21,7 +21,6 @@ public class CalificacionController {
 
     @PostMapping
     public ResponseEntity<?> crear(@Valid @RequestBody CalificacionDTO dto) {
-        // ✅ @Valid — Recomendación del profesor
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(calificacionService.guardar(dto));
     }

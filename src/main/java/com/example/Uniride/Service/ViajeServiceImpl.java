@@ -17,7 +17,6 @@ import java.util.List;
 @Service
 public class ViajeServiceImpl implements ViajeService {
 
-    // ✅ Logger profesional — Recomendación del profesor
     private static final Logger logger = LoggerFactory.getLogger(ViajeServiceImpl.class);
 
     private final ViajeRepository        viajeRepository;
@@ -66,7 +65,6 @@ public class ViajeServiceImpl implements ViajeService {
         return viajeRepository.findAll();
     }
 
-    // ✅ Paginación — Recomendación del profesor
     @Override
     public Page<Viaje> listarPaginado(Pageable pageable) {
         logger.debug("Listando viajes paginados - página {}", pageable.getPageNumber());
@@ -199,7 +197,6 @@ public class ViajeServiceImpl implements ViajeService {
                 notif.setMensaje("Tu viaje de " + v.getOrigen() + " a " +
                         v.getDestino() + " ha finalizado. " +
                         "¡Califica a tu conductor " +
-                        // ✅ null-safe — Recomendación del profesor
                         (v.getVehiculo() != null && v.getVehiculo().getUsuario() != null
                                 ? v.getVehiculo().getUsuario().getNombre() : "tu conductor") + "!");
                 notif.setDestinatarios("pasajero");

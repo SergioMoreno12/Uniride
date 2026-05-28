@@ -38,7 +38,6 @@ public class Viaje {
     @Column(name = "descripcion_punto", length = 500)
     private String descripcionPunto;
 
-    /** ✅ NUEVO: "ida" (ciudad → universidad) o "vuelta" (universidad → ciudad) */
     @Column(name = "tipo_viaje", length = 10)
     private String tipoViaje = "ida";
 
