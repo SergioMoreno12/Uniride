@@ -5,6 +5,7 @@ import com.example.Uniride.Model.Reporte;
 import com.example.Uniride.Model.Usuario;
 import com.example.Uniride.Repository.ReporteRepository;
 import com.example.Uniride.Repository.UsuarioRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
@@ -45,6 +46,7 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     @Override
+    @Transactional
     public Reporte guardar(ReporteDTO dto) {
         return reporteRepository.save(toEntity(dto));
     }

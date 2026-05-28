@@ -36,8 +36,13 @@ public class ReporteController {
 
     // POST /api/reportes
     @PostMapping
-    public ResponseEntity<Reporte> crear(@RequestBody ReporteDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(reporteService.guardar(dto));
+    public ResponseEntity<Void> crear(@RequestBody ReporteDTO dto) {
+        try {
+            reporteService.guardar(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
     // PUT /api/reportes/{id}
