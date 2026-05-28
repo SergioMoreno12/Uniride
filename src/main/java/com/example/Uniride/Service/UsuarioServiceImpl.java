@@ -58,7 +58,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarioRepository.findAll();
     }
 
-    // ✅ Paginación — Recomendación del profesor
     @Override
     public Page<Usuario> listarPaginado(Pageable pageable) {
         logger.debug("Listando usuarios paginados - página {}", pageable.getPageNumber());
@@ -98,7 +97,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         u.setCorreo(correoNorm);
         u.setNombre(dto.getNombre().trim());
         u.setTelefono(dto.getTelefono());
-        // ✅ BCrypt — Recomendación del profesor (ya estaba, confirmado)
         u.setContrasena(encoder.encode(dto.getContrasena()));
         u.setRol(rol);
         u.setFechaRegistro(LocalDate.now());
@@ -128,7 +126,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario u = buscarPorId(id);
         if (dto.getContrasenaNueva() == null || dto.getContrasenaNueva().length() < 6)
             throw new RuntimeException("La nueva contraseña debe tener al menos 6 caracteres");
-        // ✅ BCrypt.matches — Recomendación del profesor
         if (!encoder.matches(dto.getContrasenaActual(), u.getContrasena()))
             throw new RuntimeException("Contraseña actual incorrecta");
         u.setContrasena(encoder.encode(dto.getContrasenaNueva()));
@@ -173,5 +170,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioRepository.deleteById(id);
 
         logger.info("Usuario id={} eliminado correctamente con todos sus datos", id);
+    }
+
+    @Override
+    public List<Usuario> listarConductores() {
+        return usuarioRepository.findByRol("conductor");
     }
 }

@@ -18,4 +18,5 @@ public interface UsuarioService {
     void            cambiarContrasena(Long id, CambiarContrasenaDTO dto);
     Usuario         toggleActivo(Long id);
     void            eliminar(Long id);
+    List<Usuario>   listarConductores();   // ← NUEVO
 }

@@ -30,6 +30,11 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
 
+    @GetMapping("/conductores")
+    public ResponseEntity<List<Usuario>> listarConductores() {
+        return ResponseEntity.ok(usuarioService.listarConductores());
+    }
+
     @GetMapping("/paginado")
     public ResponseEntity<Page<Usuario>> listarPaginado(Pageable pageable) {
         return ResponseEntity.ok(usuarioService.listarPaginado(pageable));
@@ -49,7 +54,6 @@ public class UsuarioController {
 
     @PostMapping
     public ResponseEntity<?> crear(@Valid @RequestBody UsuarioDTO dto) {
-        // ✅ @Valid — Recomendación del profesor
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.guardar(dto));
     }
 
