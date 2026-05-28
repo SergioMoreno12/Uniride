@@ -64,10 +64,6 @@ public class SedeServiceImpl implements SedeService {
         return sedeRepository.save(sede);
     }
 
-    /**
-     * Eliminar sede en cascada: por cada viaje asociado, borra
-     * calificaciones → reservas → notificaciones → viaje → sede.
-     */
     @Override
     @Transactional
     public void eliminar(Long id) {

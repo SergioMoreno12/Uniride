@@ -26,8 +26,6 @@ public class ViajeController {
         return ResponseEntity.ok(viajeService.listarTodos());
     }
 
-    // ✅ Endpoint paginado — Recomendación del profesor
-    // Uso: GET /api/viajes/paginado?page=0&size=10&sort=fechaHora,asc
     @GetMapping("/paginado")
     public ResponseEntity<Page<Viaje>> listarPaginado(Pageable pageable) {
         return ResponseEntity.ok(viajeService.listarPaginado(pageable));
@@ -41,7 +39,6 @@ public class ViajeController {
 
     @PostMapping
     public ResponseEntity<?> crear(@Valid @RequestBody ViajeDTO dto) {
-        // ✅ @Valid — Recomendación del profesor
         return ResponseEntity.status(HttpStatus.CREATED).body(viajeService.guardar(dto));
     }
 

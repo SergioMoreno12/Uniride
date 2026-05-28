@@ -19,7 +19,6 @@ import java.util.List;
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
 
-    // ✅ Logger profesional — Recomendación del profesor
     private static final Logger logger = LoggerFactory.getLogger(UsuarioServiceImpl.class);
 
     private final UsuarioRepository         usuarioRepository;

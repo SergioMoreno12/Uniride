@@ -20,8 +20,6 @@ public class AuthController {
     // POST /api/auth/login
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginDTO dto) {
-        // ✅ @Valid activa las validaciones del DTO — Recomendación del profesor
-        // Los errores son capturados por GlobalExceptionHandler
         LoginResponseDTO response = authService.login(dto);
         return ResponseEntity.ok(response);
     }

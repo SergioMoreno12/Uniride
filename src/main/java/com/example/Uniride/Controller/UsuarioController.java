@@ -30,8 +30,6 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
 
-    // ✅ Endpoint paginado — Recomendación del profesor
-    // Uso: GET /api/usuarios/paginado?page=0&size=10&sort=nombre,asc
     @GetMapping("/paginado")
     public ResponseEntity<Page<Usuario>> listarPaginado(Pageable pageable) {
         return ResponseEntity.ok(usuarioService.listarPaginado(pageable));

@@ -6,6 +6,7 @@ import com.example.Uniride.Model.Usuario;
 import com.example.Uniride.Repository.ReporteRepository;
 import com.example.Uniride.Repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -25,7 +26,7 @@ public class ReporteServiceImpl implements ReporteService {
         r.setTitulo(dto.getTitulo());
         r.setDescripcion(dto.getDescripcion());
         r.setEstado(dto.getEstado() != null ? dto.getEstado() : "pendiente");
-        r.setFechaReporte(dto.getFechaReporte());
+        r.setFechaReporte(dto.getFechaReporte() != null ? dto.getFechaReporte() : LocalDate.now());
         Usuario u = usuarioRepository.findById(dto.getIdUsuario())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + dto.getIdUsuario()));
         r.setUsuario(u);

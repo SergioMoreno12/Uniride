@@ -8,7 +8,6 @@ import java.util.List;
 
 public interface ViajeService {
     List<Viaje>   listarTodos();
-    // ✅ Paginación — Recomendación del profesor
     Page<Viaje>   listarPaginado(Pageable pageable);
     Viaje         buscarPorId(Long id);
     Viaje         guardar(ViajeDTO dto);

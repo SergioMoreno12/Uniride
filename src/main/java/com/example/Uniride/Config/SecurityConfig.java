@@ -31,11 +31,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ CSRF desactivado (API REST stateless)
                 .csrf(csrf -> csrf.disable())
-                // ✅ CORS con configuración de CorsConfig
                 .cors(Customizer.withDefaults())
-                // ✅ Sin sesiones HTTP (stateless JWT)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -56,7 +53,6 @@ public class SecurityConfig {
                         // Todo lo demás requiere autenticación JWT
                         .anyRequest().authenticated()
                 )
-                // ✅ Añadir el filtro JWT antes del filtro estándar de autenticación
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

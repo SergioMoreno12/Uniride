@@ -42,7 +42,6 @@ public class ReservaController {
 
     @PostMapping
     public ResponseEntity<?> crear(@Valid @RequestBody ReservaDTO dto) {
-        // ✅ @Valid — Recomendación del profesor
         return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.guardar(dto));
     }
 

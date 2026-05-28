@@ -11,7 +11,6 @@ import java.time.LocalDate;
 @ToString
 public class UsuarioDTO {
 
-    // ✅ Validaciones — Recomendación del profesor
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 200, message = "El nombre no puede superar 200 caracteres")
     private String nombre;

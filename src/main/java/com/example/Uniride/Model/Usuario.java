@@ -30,7 +30,6 @@ public class Usuario {
     @Column(length = 20)
     private String telefono;
 
-    // ✅ CORRECCIÓN CRÍTICA: nunca exponer la contraseña en respuestas JSON
     @JsonIgnore
     @Column(nullable = false, length = 200)
     private String contrasena;

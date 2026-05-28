@@ -15,11 +15,6 @@ public interface NotificacionRepository extends JpaRepository<Notificacion, Long
             "ORDER BY fecha_envio DESC", nativeQuery = true)
     List<Notificacion> findByDestinatarios(String destinatarios);
 
-    /**
-     * Devuelve TODAS las notificaciones para el usuario:
-     *   - Las personalizadas (id_usuario = X)
-     *   - Las broadcast por su rol (id_usuario IS NULL AND destinatarios IN ('todos', rol))
-     */
     @Query(value =
             "SELECT n.* FROM notificacion n " +
                     "WHERE n.id_usuario = :idUsuario " +

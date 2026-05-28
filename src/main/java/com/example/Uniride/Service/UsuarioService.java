@@ -10,7 +10,6 @@ import java.util.List;
 
 public interface UsuarioService {
     List<Usuario>   listarTodos();
-    // ✅ Paginación — Recomendación del profesor
     Page<Usuario>   listarPaginado(Pageable pageable);
     Usuario         buscarPorId(Long id);
     Usuario         buscarPorCorreo(String correo);
