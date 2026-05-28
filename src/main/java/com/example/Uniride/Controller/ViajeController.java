@@ -73,6 +73,11 @@ public class ViajeController {
         return ResponseEntity.ok(viajeService.buscarPorCiudad(ciudad));
     }
 
+    @GetMapping("/destino/{ciudad}")                              // ← NUEVO
+    public ResponseEntity<List<Viaje>> porDestino(@PathVariable String ciudad) {
+        return ResponseEntity.ok(viajeService.buscarPorDestino(ciudad));
+    }
+
     @PatchMapping("/{id}/cancelar")
     public ResponseEntity<?> cancelar(@PathVariable Long id) {
         return ResponseEntity.ok(viajeService.cancelar(id));

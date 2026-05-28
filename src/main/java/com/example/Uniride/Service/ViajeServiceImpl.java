@@ -175,6 +175,11 @@ public class ViajeServiceImpl implements ViajeService {
     }
 
     @Override
+    public List<Viaje> buscarPorDestino(String ciudad) {           // ← NUEVO
+        return viajeRepository.findByDestinoContaining(ciudad);
+    }
+
+    @Override
     public Viaje cancelar(Long id) {
         Viaje v = buscarPorId(id);
         v.setEstado("cancelado");

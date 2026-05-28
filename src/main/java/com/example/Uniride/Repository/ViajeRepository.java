@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
 @Repository
@@ -28,6 +27,9 @@ public interface ViajeRepository extends JpaRepository<Viaje, Long> {
 
     @Query(value = "SELECT * FROM viaje WHERE origen ILIKE %:ciudad%", nativeQuery = true)
     List<Viaje> findByOrigenContaining(String ciudad);
+
+    @Query(value = "SELECT * FROM viaje WHERE destino ILIKE %:ciudad%", nativeQuery = true)
+    List<Viaje> findByDestinoContaining(String ciudad);   // ← NUEVO
 
     @Modifying
     @Query(value = "DELETE FROM viaje WHERE id_vehiculo = :idVehiculo", nativeQuery = true)
