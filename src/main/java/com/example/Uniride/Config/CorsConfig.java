@@ -32,7 +32,8 @@ public class CorsConfig {
                 "POST",
                 "PUT",
                 "DELETE",
-                "OPTIONS"
+                "OPTIONS",
+                "PATCH"
         ));
 
         UrlBasedCorsConfigurationSource source =

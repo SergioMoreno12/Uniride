@@ -10,6 +10,8 @@ import com.example.Uniride.Repository.NotificacionRepository;
 import com.example.Uniride.Repository.ReservaRepository;
 import com.example.Uniride.Repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,6 +36,7 @@ public class CalificacionServiceImpl implements CalificacionService {
     }
 
     @Override
+    @Transactional
     public Calificacion guardar(CalificacionDTO dto) {
         // Verificar que no haya calificado antes
         if (calificacionRepository.existsByIdReserva(dto.getIdReserva()) > 0)
@@ -56,10 +59,8 @@ public class CalificacionServiceImpl implements CalificacionService {
         Calificacion saved = calificacionRepository.save(c);
 
         // Marcar reserva como calificada
-        try {
-            reserva.setCalificada(true);
-            reservaRepository.save(reserva);
-        } catch (Exception ignored) { }
+        reserva.setCalificada(true);
+        reservaRepository.save(reserva);
 
         // Notificar al conductor sobre la calificación
         try {
