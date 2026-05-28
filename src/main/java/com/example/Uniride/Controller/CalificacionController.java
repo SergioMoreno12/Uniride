@@ -18,6 +18,8 @@ public class CalificacionController {
         this.calificacionService = calificacionService;
     }
 
+    // FIX: retorna Void en lugar de la entidad Calificacion para evitar
+    // LazyInitializationException durante la serialización Jackson
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody CalificacionDTO dto) {
         try {
