@@ -52,11 +52,12 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     @Override
+    @Transactional
     public Reporte actualizar(Long id, ReporteDTO dto) {
         Reporte r = buscarPorId(id);
-        r.setTitulo(dto.getTitulo());
-        r.setDescripcion(dto.getDescripcion());
-        if (dto.getEstado() != null) r.setEstado(dto.getEstado());
+        if (dto.getTitulo()      != null) r.setTitulo(dto.getTitulo());
+        if (dto.getDescripcion() != null) r.setDescripcion(dto.getDescripcion());
+        if (dto.getEstado()      != null) r.setEstado(dto.getEstado());
         return reporteRepository.save(r);
     }
 

@@ -47,9 +47,10 @@ public class ReporteController {
 
     // PUT /api/reportes/{id}
     @PutMapping("/{id}")
-    public ResponseEntity<Reporte> actualizar(@PathVariable Long id, @RequestBody ReporteDTO dto) {
+    public ResponseEntity<Void> actualizar(@PathVariable Long id, @RequestBody ReporteDTO dto) {
         try {
-            return ResponseEntity.ok(reporteService.actualizar(id, dto));
+            reporteService.actualizar(id, dto);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
